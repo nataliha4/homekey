@@ -43,6 +43,10 @@ var Sound = (function () {
           if (style === 'groove') {
             tone(b.bass, t, beatDur * 0.9, 0.28);
             b.notes.forEach(function (n) { tone(n, t + beatDur / 2, 0.3, 0.16); });
+          } else if (style === 'waltz') {
+            // Three beats to the bar: bass on beat one, the chord on beats two and three.
+            if (i % 3 === 0) { tone(b.bass, t, beatDur * 2.6, 0.3); }
+            else { b.notes.forEach(function (n) { tone(n, t, 0.3, 0.16); }); }
           } else {
             tone(b.bass, t, beatDur * 1.1, 0.2);
             b.notes.forEach(function (n, k) { tone(n, t + k * 0.01, beatDur * 1.15, 0.2); });
@@ -145,14 +149,14 @@ CONTENT.chapters['1a'] = {
     // To confirm with Troy: this recording seems to stay on one plain major chord.
     { title: 'Are You Sleeping? (Fr\u00e8re Jacques)', artist: 'Traditional', kind: 'Major home',
       url: 'https://open.spotify.com/track/67m0guhBCj1j9MTVSPus15',
-      beats: repeat({ notes: [60, 64, 67], bass: 48, caption: 'One chord the whole way: C major' }, 8), beatDur: 0.6 },
+      beats: repeat({ notes: [60, 64, 67], bass: 48, caption: 'One chord the whole way: C major' }, 8), beatDur: 0.75 },
     { title: 'Coconut', artist: 'Harry Nilsson', kind: 'Major home',
       note: 'You may hear one extra, spicy note in this chord. Ignore it for now: we\'ll meet it in chapter 1c.',
       url: 'https://open.spotify.com/search/Coconut%20Harry%20Nilsson',
-      beats: repeat({ notes: [60, 64, 67, 70], bass: 48, caption: 'One chord the whole way: C7 (major)' }, 8), beatDur: 0.6 },
+      beats: repeat({ notes: [60, 64, 67, 70], bass: 48, caption: 'One chord the whole way: C7 (major)' }, 8), beatDur: 0.75 },
     { title: 'Carol of the Bells', artist: 'Mykola Leontovych', kind: 'Minor home',
       url: 'https://open.spotify.com/search/Carol%20of%20the%20Bells',
-      beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 8), beatDur: 0.6 }
+      beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 12), beatDur: 0.75, style: 'waltz' }
   ],
   rounds: 10,
   choose: {
@@ -175,7 +179,7 @@ CONTENT.chapters['1a'] = {
       'Now you. Find <strong>C major</strong> on your piano: C, E and G, as lit on the keyboard below.',
       'Start the groove and play the chord along with it, in any rhythm you like.'
     ],
-    start: function () { playBeats(repeat(C_MAJOR, 8), 0.6, 'groove'); },
+    start: function () { playBeats(repeat(C_MAJOR, 8), 0.75, 'groove'); },
     ready: function () { light(C_MAJOR.notes, 'C major: C, E, G'); }
   },
   recap: [
@@ -200,11 +204,11 @@ CONTENT.chapters['1b'] = {
   songs: [
     { title: 'Jambalaya', artist: 'Hank Williams', kind: 'Major',
       url: 'https://open.spotify.com/search/Jambalaya%20Hank%20Williams',
-      beats: [].concat(repeat(C_MAJOR, 4), repeat(G_DOOR, 8), repeat(C_MAJOR, 4)), beatDur: 0.6 },
+      beats: [].concat(repeat(C_MAJOR, 4), repeat(G_DOOR, 8), repeat(C_MAJOR, 4)), beatDur: 0.75 },
     // To confirm against a recording: usually played on just these two chords.
     { title: 'Joshua Fit the Battle of Jericho', artist: 'Traditional', kind: 'Minor',
       url: 'https://open.spotify.com/search/Joshua%20Fit%20the%20Battle%20of%20Jericho',
-      beats: [].concat(repeat(C_MINOR, 4), repeat(G_DOOR, 4), repeat(C_MINOR, 4), repeat(G_DOOR, 2), repeat(C_MINOR, 2)), beatDur: 0.6 }
+      beats: [].concat(repeat(C_MINOR, 4), repeat(G_DOOR, 4), repeat(C_MINOR, 4), repeat(G_DOOR, 2), repeat(C_MINOR, 2)), beatDur: 0.75 }
   ],
   rounds: 10,
   choose: {
@@ -238,7 +242,7 @@ CONTENT.chapters['1b'] = {
     ],
     start: function () {
       var bar = [].concat(repeat(C_MAJOR, 4), repeat(C_MAJOR, 4), repeat(G_DOOR, 4), repeat(C_MAJOR, 4));
-      playBeats(bar.concat(bar), 0.6, 'groove');
+      playBeats(bar.concat(bar), 0.75, 'groove');
     },
     ready: function () { light(C_MAJOR.notes, C_MAJOR.caption); }
   },
@@ -264,11 +268,11 @@ CONTENT.chapters['1c'] = {
   songs: [
     { title: 'Jambalaya', artist: 'Hank Williams', kind: 'Major',
       url: 'https://open.spotify.com/search/Jambalaya%20Hank%20Williams',
-      beats: [].concat(repeat(C_MAJOR, 4), repeat(G_DOOR7, 8), repeat(C_MAJOR, 4)), beatDur: 0.6 },
+      beats: [].concat(repeat(C_MAJOR, 4), repeat(G_DOOR7, 8), repeat(C_MAJOR, 4)), beatDur: 0.75 },
     // To confirm against a recording: usually played on just these two chords.
     { title: 'Joshua Fit the Battle of Jericho', artist: 'Traditional', kind: 'Minor',
       url: 'https://open.spotify.com/search/Joshua%20Fit%20the%20Battle%20of%20Jericho',
-      beats: [].concat(repeat(C_MINOR, 4), repeat(G_DOOR7, 4), repeat(C_MINOR, 4), repeat(G_DOOR7, 2), repeat(C_MINOR, 2)), beatDur: 0.6 }
+      beats: [].concat(repeat(C_MINOR, 4), repeat(G_DOOR7, 4), repeat(C_MINOR, 4), repeat(G_DOOR7, 2), repeat(C_MINOR, 2)), beatDur: 0.75 }
   ],
   rounds: 10,
   choose: {
@@ -295,7 +299,7 @@ CONTENT.chapters['1c'] = {
     ],
     start: function () {
       var bar = [].concat(repeat(C_MAJOR, 4), repeat(C_MAJOR, 4), repeat(G_DOOR7, 4), repeat(C_MAJOR, 4));
-      playBeats(bar.concat(bar), 0.6, 'groove');
+      playBeats(bar.concat(bar), 0.75, 'groove');
     },
     ready: function () { light(G_DOOR7.notes, G_DOOR7.caption); }
   },
@@ -321,11 +325,11 @@ CONTENT.chapters['1d'] = {
   songs: [
     { title: 'Happy Birthday', artist: 'Traditional', kind: 'Major',
       url: 'https://open.spotify.com/search/Happy%20Birthday',
-      beats: [].concat(repeat(C_MAJOR, 2), repeat(G_DOOR7, 4), repeat(C_MAJOR, 4), repeat(F_GARDEN, 2), [C_MAJOR, G_DOOR7], repeat(C_MAJOR, 2)), beatDur: 0.6 },
+      beats: [].concat(repeat(C_MAJOR, 2), repeat(G_DOOR7, 4), repeat(C_MAJOR, 4), repeat(F_GARDEN, 2), [C_MAJOR, G_DOOR7], repeat(C_MAJOR, 2)), beatDur: 0.75 },
     // To confirm against a recording: usually played on just these three chords.
     { title: 'Dark Eyes', artist: 'Traditional', kind: 'Minor',
       url: 'https://open.spotify.com/search/Dark%20Eyes%20Ochi%20Chernye',
-      beats: [].concat(repeat(G_DOOR7, 2), repeat(C_MINOR, 2), repeat(G_DOOR7, 2), repeat(C_MINOR, 2), repeat(F_GARDEN_MINOR, 2), repeat(C_MINOR, 2), repeat(G_DOOR7, 2), repeat(C_MINOR, 2)), beatDur: 0.6 }
+      beats: [].concat(repeat(G_DOOR7, 2), repeat(C_MINOR, 2), repeat(G_DOOR7, 2), repeat(C_MINOR, 2), repeat(F_GARDEN_MINOR, 2), repeat(C_MINOR, 2), repeat(G_DOOR7, 2), repeat(C_MINOR, 2)), beatDur: 0.75 }
   ],
   rounds: 10,
   choose: {
@@ -367,7 +371,7 @@ CONTENT.chapters['1d'] = {
     ],
     start: function () {
       var bar = [].concat(repeat(C_MAJOR, 4), repeat(F_GARDEN, 4), repeat(G_DOOR7, 4), repeat(C_MAJOR, 4));
-      playBeats(bar.concat(bar), 0.6, 'groove');
+      playBeats(bar.concat(bar), 0.75, 'groove');
     },
     ready: function () { light(C_MAJOR.notes, C_MAJOR.caption); }
   },
@@ -395,11 +399,11 @@ CONTENT.chapters['1e'] = {
     // To confirm against a recording: opening goes home, bedroom, home, bedroom.
     { title: 'Hallelujah', artist: 'Leonard Cohen', kind: 'Major home',
       url: 'https://open.spotify.com/search/Hallelujah%20Leonard%20Cohen',
-      beats: [].concat(repeat(C_MAJOR, 2), repeat(A_BED, 2), repeat(C_MAJOR, 2), repeat(A_BED, 2), repeat(F_GARDEN, 2), repeat(G_DOOR7, 2), repeat(C_MAJOR, 2), repeat(G_DOOR7, 2)), beatDur: 0.6 },
+      beats: [].concat(repeat(C_MAJOR, 2), repeat(A_BED, 2), repeat(C_MAJOR, 2), repeat(A_BED, 2), repeat(F_GARDEN, 2), repeat(G_DOOR7, 2), repeat(C_MAJOR, 2), repeat(G_DOOR7, 2)), beatDur: 0.75 },
     // To confirm against a recording: home, bedroom, garden, door.
     { title: 'Stand by Me', artist: 'Ben E. King', kind: 'Major home',
       url: 'https://open.spotify.com/search/Stand%20by%20Me%20Ben%20E.%20King',
-      beats: [].concat(repeat(C_MAJOR, 4), repeat(A_BED, 4), repeat(F_GARDEN, 2), repeat(G_DOOR7, 2), repeat(C_MAJOR, 4)), beatDur: 0.6 }
+      beats: [].concat(repeat(C_MAJOR, 4), repeat(A_BED, 4), repeat(F_GARDEN, 2), repeat(G_DOOR7, 2), repeat(C_MAJOR, 4)), beatDur: 0.75 }
   ],
   rounds: 10,
   choose: {
@@ -437,7 +441,7 @@ CONTENT.chapters['1e'] = {
     ],
     start: function () {
       var bar = [].concat(repeat(C_MAJOR, 4), repeat(A_BED, 4), repeat(F_GARDEN, 4), repeat(G_DOOR7, 4));
-      playBeats(bar.concat(bar, repeat(C_MAJOR, 2)), 0.6, 'groove');
+      playBeats(bar.concat(bar, repeat(C_MAJOR, 2)), 0.75, 'groove');
     },
     ready: function () { light(C_MAJOR.notes, C_MAJOR.caption); }
   },
@@ -636,7 +640,7 @@ view.addEventListener('click', function (e) {
   else if (act === 'reset-no') { state.askReset = false; render('reset-ask'); }
   else if (act === 'reset-yes') { Progress.reset(); state.askReset = false; render(); }
   else if (act === 'demo') { stopAll(); ch.demo(); }
-  else if (act === 'song') { var s = ch.songs[Number(el.getAttribute('data-i'))]; playBeats(s.beats, s.beatDur, 'groove'); }
+  else if (act === 'song') { var s = ch.songs[Number(el.getAttribute('data-i'))]; playBeats(s.beats, s.beatDur, s.style || 'groove'); }
   else if (act === 'next') {
     stopAll();
     state.step += 1; state.maxStep = Math.max(state.maxStep, state.step); state.lit = []; state.caption = '';
