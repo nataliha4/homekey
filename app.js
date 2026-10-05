@@ -139,10 +139,15 @@ CONTENT.chapters['1a'] = {
   ],
   demoLabel: 'Hear a home chord',
   demo: function () { light(C_MAJOR.notes, 'C major: C, E, G'); Sound.chord(C_MAJOR.notes, 2); },
-  toListen: 'Next: listen to two songs',
-  listenIntro: 'Two songs that stay on one chord. One home is bright, the other is dark.',
+  toListen: 'Next: listen to three songs',
+  listenIntro: 'Three songs that stay on one chord. Two homes are bright, one is dark.',
   songs: [
+    // To confirm with Troy: this recording seems to stay on one plain major chord.
+    { title: 'Are You Sleeping? (Fr\u00e8re Jacques)', artist: 'Traditional', kind: 'Major home',
+      url: 'https://open.spotify.com/track/67m0guhBCj1j9MTVSPus15',
+      beats: repeat({ notes: [60, 64, 67], bass: 48, caption: 'One chord the whole way: C major' }, 8), beatDur: 0.42 },
     { title: 'Coconut', artist: 'Harry Nilsson', kind: 'Major home',
+      note: 'You may hear one extra, spicy note in this chord. Ignore it for now: we\'ll meet it in chapter 1c.',
       url: 'https://open.spotify.com/search/Coconut%20Harry%20Nilsson',
       beats: repeat({ notes: [60, 64, 67, 70], bass: 48, caption: 'One chord the whole way: C7 (major)' }, 8), beatDur: 0.42 },
     { title: 'Carol of the Bells', artist: 'Mykola Leontovych', kind: 'Minor home',
@@ -561,6 +566,7 @@ function chapterHtml() {
     h += '<p>' + esc(ch.listenIntro) + '</p>';
     ch.songs.forEach(function (s, i) {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
+        (s.note ? '<div class="small muted">' + esc(s.note) + '</div>' : '') +
         '<div class="row"><button type="button" class="btn" id="song-' + i + '" data-act="song" data-i="' + i + '">Play the groove</button>' +
         '<a href="' + s.url + '" target="_blank" rel="noopener">Open in Spotify</a></div></div>';
     });
