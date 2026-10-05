@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HomeKey</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@600;700&display=swap">
+<style>
+/* Layout: one phone-width column, centered; the path scrolls, a chapter is a card above a piano keyboard. Single dark look by choice. */
+:root {
+  color-scheme: dark;
+  --bg: #0F1724;
+  --surface: #1A2536;
+  --surface-2: #141D2C;
+  --line: #2B3A52;
+  --fg: #F4F1EA;
+  --soft: #C9D2E0;
+  --muted: #A9B4C6;
+  --accent: #F5B841;
+  --accent-ink: #1A1300;
+  --ok: #6AD1C7;
+  --ok-bg: #12333A;
+  --warn: #FF9A5C;
+  --warn-bg: #3A2418;
+  --ivory: #F4F1EA;
+  --ebony: #0B111B;
+  --display: 'Outfit', 'Trebuchet MS', system-ui, sans-serif;
+  --body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+html, body { background: var(--bg); }
+body { color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+.app { max-width: 430px; margin: 0 auto; padding-inline: 16px; padding-block: 24px 32px; display: flex; flex-direction: column; gap: 20px; }
+button { font-family: inherit; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--ok); outline-offset: 3px; }
+a { color: var(--ok); }
+h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 30px; line-height: 1.15; text-wrap: balance; }
+.eyebrow { font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.muted { color: var(--muted); }
+.small { font-size: 13px; line-height: 1.4; }
+.stack { display: flex; flex-direction: column; }
+
+/* Name mark */
+.mark { display: flex; align-items: center; align-self: flex-start; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+.mark .clef { font-size: 27px; line-height: 1; margin-right: 10px; }
+.mark .tile { width: 27px; height: 37px; box-sizing: border-box; border-right: 2px solid var(--bg); border-radius: 0 0 4px 4px; background: var(--ivory); color: var(--bg); display: flex; align-items: flex-end; justify-content: center; padding-bottom: 9px; font-family: var(--display); font-weight: 700; font-size: 17px; line-height: 1; }
+.mark .tile.on { background: var(--accent); }
+
+/* Buttons */
+.btn { min-height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); font-size: 16px; font-weight: 700; padding: 10px 16px; cursor: pointer; }
+.btn.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.btn.quiet { min-height: 44px; border-color: transparent; background: transparent; color: var(--muted); font-size: 14px; padding: 8px 10px; }
+.btn:hover { filter: brightness(1.08); }
+
+/* Path */
+.progress { height: 8px; border-radius: 4px; background: var(--surface); overflow: hidden; }
+.progress > div { height: 8px; border-radius: 4px; background: var(--accent); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.card h2 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 700; line-height: 1.2; }
+.trail { position: relative; height: 416px; }
+.trail .dot { position: absolute; width: 6px; height: 6px; border-radius: 3px; background: #4A5E7E; }
+.node { position: absolute; width: 68px; height: 68px; box-sizing: border-box; border-radius: 34px; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-weight: 700; font-size: 20px; background: var(--bg); border: 2px solid var(--line); color: var(--muted); padding: 0; }
+button.node { cursor: pointer; }
+.node.current { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-size: 22px; box-shadow: 0 0 0 7px rgba(245, 184, 65, 0.22); }
+.node.done { border-color: var(--ok); color: var(--ok); }
+.node-label { position: absolute; display: flex; flex-direction: column; gap: 2px; }
+.node-label .t { font-size: 15px; font-weight: 700; color: var(--soft); }
+.node-label .s { font-size: 13px; color: var(--muted); }
+button.node-label { background: none; border: 0; padding: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; align-items: flex-start; text-align: left; }
+button.node-label[style*="text-align: right"] { align-items: flex-end; }
+.node-label.live .t { font-size: 16px; color: var(--fg); }
+.node-label.live .s { font-weight: 700; color: var(--accent); }
+.node-label.live.done .s { color: var(--ok); }
+.locked { min-height: 72px; box-sizing: border-box; background: var(--surface-2); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; }
+.locked .num { flex: none; width: 40px; height: 40px; box-sizing: border-box; border-radius: 20px; border: 2px solid var(--line); color: var(--muted); font-family: var(--display); font-size: 17px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.locked .txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.locked .name { font-weight: 700; line-height: 1.25; color: var(--soft); }
+.locked svg { flex: none; }
+.reset-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* Chapter */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chips { display: flex; gap: 6px; }
+.chip { flex: 1; min-width: 0; height: 40px; box-sizing: border-box; border-radius: 20px; border: 1.5px solid var(--line); background: transparent; padding: 0; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 700; }
+.chip.done { border-color: var(--ok); color: var(--ok); }
+button.chip { cursor: pointer; }
+button.chip:hover { background: var(--ok-bg); }
+.chip.active { flex: 2.2; border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.chip .lbl { display: none; }
+.chip.active .lbl { display: inline; }
+.step { min-height: 330px; }
+.step p { margin: 0; }
+.song { border: 1.5px solid var(--line); border-radius: 14px; background: var(--bg); padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.song .head { display: flex; align-items: center; gap: 12px; }
+.song .icon { font-size: 24px; }
+.song .name { font-weight: 700; }
+.song .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.song .btn { min-height: 44px; font-size: 15px; background: var(--surface); }
+.choices { display: flex; gap: 10px; }
+.choice { flex: 1; height: 92px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.choice b { font-family: var(--display); font-size: 22px; }
+.choice span { font-size: 13px; color: var(--muted); }
+.choices.three { gap: 8px; }
+.choices.three .choice b { font-size: 19px; }
+.choice.right { border-color: var(--ok); background: var(--ok-bg); }
+.choice.wrong { border-color: var(--warn); background: var(--warn-bg); }
+.feedback { font-weight: 700; }
+.feedback.good { color: var(--ok); }
+.feedback.bad { color: var(--warn); }
+.spread { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.grow { flex: 1; }
+.recap-list { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+
+.scene { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 6px; }
+.scene svg { display: block; width: 100%; height: auto; }
+
+/* Keyboard */
+.kb-caption { min-height: 18px; font-size: 13px; font-weight: 700; color: var(--muted); }
+.kb { position: relative; display: flex; height: 150px; border-radius: 0 0 10px 10px; overflow: hidden; }
+.wk { flex: 1; height: 150px; border: 0; border-right: 2px solid var(--bg); border-radius: 0 0 8px 8px; background: var(--ivory); color: var(--accent-ink); padding: 0 0 8px; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; font-size: 12px; font-weight: 700; }
+.wk span { visibility: hidden; }
+.wk.lit { background: var(--accent); }
+.wk.lit span { visibility: visible; }
+.bk { position: absolute; top: 0; width: 22px; height: 92px; margin-left: -12px; border: 0; border-radius: 0 0 6px 6px; background: var(--ebony); padding: 0; cursor: pointer; }
+.bk.lit { background: var(--accent); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .node.current { animation: pulse 2.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 7px rgba(245, 184, 65, 0.22); } 50% { box-shadow: 0 0 0 11px rgba(245, 184, 65, 0.10); } }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <button type="button" class="mark" id="home" aria-label="HomeKey: back to your path">
+    <span class="clef" aria-hidden="true">🎼</span>
+    <span class="tile on">H</span><span class="tile">o</span><span class="tile on">m</span><span class="tile">e</span><span class="tile on">K</span><span class="tile">e</span><span class="tile">y</span>
+  </button>
+  <main id="view" class="stack" style="gap: 20px"></main>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
