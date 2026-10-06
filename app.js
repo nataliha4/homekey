@@ -651,12 +651,13 @@ function chapterHtml() {
     var cur = state.cur;
     h += '<div class="spread small muted" style="font-weight: 700"><span>Round ' + state.round + ' of ' + ch.rounds + '</span><span>' + state.score + ' correct</span></div>' +
       '<p>' + esc(ch.choose.prompt) + '</p>' +
-      '<button type="button" class="btn" id="hear" data-act="hear">' + esc(ch.choose.replay) + '</button><div class="choices' + (ch.choose.options.length > 2 ? ' three' : '') + '">';
+      '<div class="small listening' + (state.listening && !answered ? ' on' : '') + '" id="listening" aria-live="polite"><span aria-hidden="true">\uD83D\uDD0A </span>Listening\u2026</div>' +
+      '<div id="choices" class="choices' + (ch.choose.options.length > 2 ? ' three' : '') + (!state.listening && !answered ? ' go' : '') + '">';
     ch.choose.options.forEach(function (o) {
       var cls = !answered ? '' : (cur.q === o.q ? ' right' : (state.picked === o.q ? ' wrong' : ''));
       h += '<button type="button" class="choice' + cls + '" id="pick-' + o.q + '" data-act="pick" data-q="' + o.q + '"><b>' + esc(o.label) + '</b><span>' + esc(o.sub) + '</span></button>';
     });
-    h += '</div>';
+    h += '</div><button type="button" class="btn quiet hear" id="hear" data-act="hear"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(ch.choose.replay) + '</button>';
     if (answered) {
       var good = state.picked === cur.q;
       h += '<div class="feedback ' + (good ? 'good' : 'bad') + '" role="status">' + esc(ch.choose.verdict(cur, good)) + '</div>' +
@@ -721,6 +722,22 @@ function refreshListen(ch) {
     var l = b.querySelector('.lbl'); if (l) { l.textContent = state.songsPlayed[i] ? 'Play again' : 'Play the groove'; }
   });
   var nx = document.getElementById('next'); if (nx) { nx.classList.toggle('primary', look.next); }
+}
+
+/* Choose step: first "Listening..." while the question plays, then the answers light up as the next action. */
+var listenTimer = null;
+function syncListening() {
+  var l = document.getElementById('listening'), c = document.getElementById('choices');
+  if (l) { l.classList.toggle('on', !!state.listening && state.picked === null); }
+  if (c) { c.classList.toggle('go', !state.listening && state.picked === null); }
+}
+function askQuestion(ch) {
+  clearTimeout(listenTimer);
+  state.listening = true;
+  ch.choose.play(state.cur);
+  syncListening();
+  var secs = state.cur.beats ? state.cur.beats.length * 0.8 + 0.4 : 1.8;
+  listenTimer = setTimeout(function () { state.listening = false; syncListening(); }, secs * 1000);
 }
 
 function render(focusId) {
@@ -794,7 +811,7 @@ view.addEventListener('click', function (e) {
   else if (act === 'next') {
     stopAll();
     state.step += 1; state.maxStep = Math.max(state.maxStep, state.step); state.lit = []; state.caption = '';
-    if (state.step === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = ch.choose.make(null); ch.choose.play(state.cur); }
+    if (state.step === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = ch.choose.make(null); askQuestion(ch); }
     render();
     if (state.step === 3) { ch.play.ready(); }
   }
@@ -803,14 +820,15 @@ view.addEventListener('click', function (e) {
     if (n > state.maxStep) { return; }
     stopAll();
     state.step = n; state.lit = []; state.caption = '';
-    if (n === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = ch.choose.make(null); ch.choose.play(state.cur); }
+    if (n === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = ch.choose.make(null); askQuestion(ch); }
     render();
     if (n === 3) { ch.play.ready(); }
     window.scrollTo(0, 0);
   }
-  else if (act === 'hear') { if (state.cur) { ch.choose.play(state.cur); } }
+  else if (act === 'hear') { if (state.cur) { if (state.picked === null) { askQuestion(ch); } else { ch.choose.play(state.cur); } } }
   else if (act === 'pick') {
     if (state.picked !== null || !state.cur) { return; }
+    clearTimeout(listenTimer); state.listening = false;
     state.picked = el.getAttribute('data-q');
     if (state.picked === state.cur.q) { state.score += 1; }
     render('next');
@@ -825,8 +843,8 @@ view.addEventListener('click', function (e) {
     } else {
       state.round += 1; state.picked = null; state.lit = []; state.caption = '';
       state.cur = ch.choose.make(state.cur);
-      render('hear');
-      ch.choose.play(state.cur);
+      render();
+      askQuestion(ch);
     }
   }
   else if (act === 'groove') { ch.play.start(); }
