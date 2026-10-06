@@ -137,8 +137,9 @@ CONTENT.chapters['1a'] = {
   title: 'One chord: home',
   scene: '<svg role="img" aria-label="An eighth note with a face sitting on a couch" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="236" y="36" width="44" height="34" rx="3" fill="none" stroke="#4A5E7E" stroke-width="3"></rect><path d="M244 62 L254 50 L262 58 L268 52 L274 62 Z" fill="#4A5E7E"></path><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
+  headline: 'Every song has a home.',
   explain: [
-    'Every song has a home: one chord where the music feels at rest. Some songs never leave it.',
+    'Home is the one chord where the music feels at rest. Some songs never leave it.',
     'Listen for that "we\'re home" feeling, because everything else in harmony is about leaving home and coming back.'
   ],
   demoLabel: 'Hear a home chord',
@@ -562,10 +563,13 @@ function chapterHtml() {
   h += '</div><section class="card step" aria-live="polite">';
 
   if (state.step === 0) {
+    if (ch.headline) { h += '<p class="idea">' + esc(ch.headline) + '</p>'; }
     if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
     ch.explain.forEach(function (p) { h += '<p>' + esc(p) + '</p>'; });
-    h += '<button type="button" class="btn" id="demo" data-act="demo">' + esc(ch.demoLabel) + '</button>' +
-      '<div class="grow"></div><button type="button" class="btn primary" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
+    // Listening comes first: the demo is the bright button until it has been played, then "Next" takes over.
+    var heard = state.heardDemo || state.maxStep > 0;
+    h += '<button type="button" class="btn' + (heard ? '' : ' primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(ch.demoLabel) + '</button>' +
+      '<div class="grow"></div><button type="button" class="btn' + (heard ? ' primary' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
   } else if (state.step === 1) {
     h += '<p>' + esc(ch.listenIntro) + '</p>';
     ch.songs.forEach(function (s, i) {
@@ -642,7 +646,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.heardDemo = false; state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -662,7 +666,12 @@ view.addEventListener('click', function (e) {
   else if (act === 'reset-ask') { state.askReset = true; render('reset-no'); }
   else if (act === 'reset-no') { state.askReset = false; render('reset-ask'); }
   else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); state.askReset = false; go('welcome'); render(); }
-  else if (act === 'demo') { stopAll(); ch.demo(); }
+  else if (act === 'demo') {
+    stopAll(); ch.demo();
+    state.heardDemo = true;
+    var nx = document.getElementById('next'); if (nx) { nx.classList.add('primary'); }
+    el.classList.remove('primary');
+  }
   else if (act === 'song') { var s = ch.songs[Number(el.getAttribute('data-i'))]; playBeats(s.beats, s.beatDur, s.style || 'groove'); }
   else if (act === 'next') {
     stopAll();
