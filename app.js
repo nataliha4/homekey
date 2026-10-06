@@ -83,24 +83,33 @@ var Voice = (function () {
   try { if ('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') { synth = window.speechSynthesis; } } catch (e) {}
   var current = null; // keeps the utterance alive while it speaks
   var token = 0;
+  // Devices ship several voices of very different quality. Prefer the natural-sounding ones by name.
+  var NICE = [/natural/i, /premium/i, /enhanced/i, /^Samantha/i, /^Ava/i, /^Allison/i, /Google US English/i, /Aria/i, /Jenny/i];
   function pickVoice() {
     try {
       var all = synth.getVoices() || [];
       var us = all.filter(function (v) { return /^en[-_]US/i.test(v.lang); });
       var en = all.filter(function (v) { return /^en/i.test(v.lang); });
+      for (var i = 0; i < NICE.length; i++) {
+        var hit = us.filter(function (v) { return NICE[i].test(v.name); })[0];
+        if (hit) { return hit; }
+      }
       return us.filter(function (v) { return v.default; })[0] || us[0] || en[0] || null;
     } catch (e) { return null; }
   }
+  // Ask for the voice list early, so the first tap doesn't have to wait for it.
+  try { if (synth) { synth.getVoices(); if (synth.addEventListener) { synth.addEventListener('voiceschanged', function () { synth.getVoices(); }); } } } catch (e) {}
   return {
     supported: !!synth,
-    speak: function (text, onDone) {
+    speak: function (text, onStart, onDone) {
       if (!synth) { return; }
       var mine = ++token;
       try {
-        synth.cancel();
+        if (synth.speaking || synth.pending) { synth.cancel(); }
         var u = new SpeechSynthesisUtterance(text);
         var v = pickVoice(); if (v) { u.voice = v; }
-        u.lang = 'en-US'; u.rate = 0.95;
+        u.lang = 'en-US'; u.rate = 1; u.pitch = 1.1;
+        u.onstart = function () { if (mine === token) { onStart(); } };
         u.onend = u.onerror = function () { if (mine === token) { current = null; onDone(); } };
         current = u;
         synth.speak(u);
@@ -114,12 +123,12 @@ function setVoice(v) {
   var el = document.getElementById('speak');
   if (el) {
     el.setAttribute('data-voice', v);
-    el.setAttribute('aria-label', v === 'speaking' ? 'Stop reading' : 'Read this explanation aloud');
+    el.setAttribute('aria-label', v === 'speaking' || v === 'loading' ? 'Stop reading' : 'Read this explanation aloud');
   }
 }
 function hushVoice() {
   Voice.stop();
-  if (typeof state !== 'undefined' && state.voice === 'speaking') { setVoice('idle'); }
+  if (typeof state !== 'undefined' && (state.voice === 'speaking' || state.voice === 'loading')) { setVoice('idle'); }
 }
 
 function stopAll() {
@@ -188,7 +197,7 @@ var CONTENT = {
 
 CONTENT.chapters['1a'] = {
   title: 'One chord: home',
-  scene: '<svg role="img" aria-label="An eighth note with a face sitting on a couch" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="236" y="36" width="44" height="34" rx="3" fill="none" stroke="#4A5E7E" stroke-width="3"></rect><path d="M244 62 L254 50 L262 58 L268 52 L274 62 Z" fill="#4A5E7E"></path><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path class="smile" d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><ellipse class="mouth" cx="161" cy="127" rx="6" ry="5" fill="#1A1300" transform="rotate(-18 161 127)"></ellipse><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  scene: '<svg role="img" aria-label="An eighth note with a face sitting on a couch" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="236" y="36" width="44" height="34" rx="3" fill="none" stroke="#4A5E7E" stroke-width="3"></rect><path d="M244 62 L254 50 L262 58 L268 52 L274 62 Z" fill="#4A5E7E"></path><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path class="smile" d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><ellipse class="mouth" cx="161" cy="127" rx="5" ry="4" fill="#1A1300" transform="rotate(-18 161 127)"></ellipse><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
   headline: 'Every song has a home.',
   // The character can read the explanation aloud: where its speech bubble sits in the scene.
@@ -788,6 +797,7 @@ function bubbleSvg(v) {
   });
   return '<g class="bubble"><ellipse cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="#F4F1EA"></ellipse><path d="' + v.tail + '" fill="#F4F1EA"></path>' +
     '<path class="i-play" d="M' + (x - 8) + ' ' + (y - 13) + ' L' + (x - 8) + ' ' + (y + 13) + ' L' + (x + 14) + ' ' + y + ' Z" fill="#0F1724"></path>' +
+    '<g class="i-dots"><circle class="d0" cx="' + (x - 12) + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle><circle class="d1" cx="' + x + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle><circle class="d2" cx="' + (x + 12) + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle></g>' +
     '<g class="i-bars">' + bars + '</g>' +
     '<g class="i-replay"><path d="M' + (x + 12) + ' ' + y + ' A12 12 0 1 1 ' + (x + 6) + ' ' + (y - 10.4) + '" fill="none" stroke="#0F1724" stroke-width="3.5" stroke-linecap="round"></path>' +
     '<path d="M' + (x + 3) + ' ' + (y - 17) + ' L' + (x + 12) + ' ' + (y - 10) + ' L' + (x + 2) + ' ' + (y - 5) + ' Z" fill="#0F1724"></path></g></g>';
@@ -835,10 +845,14 @@ view.addEventListener('click', function (e) {
   var ch = CONTENT.chapters[state.chapter];
 
   if (act === 'speak') {
-    if (state.voice === 'speaking') { hushVoice(); return; }
+    if (state.voice === 'speaking' || state.voice === 'loading') { hushVoice(); return; }
     stopAll();
-    setVoice('speaking');
-    Voice.speak([ch.headline].concat(ch.explain).join(' '), function () { if (state.voice === 'speaking') { setVoice('done'); } });
+    // The device can take a moment to start speaking: show "getting ready" dots until the voice is heard.
+    setVoice('loading');
+    var begin = function () { if (state.voice === 'loading') { setVoice('speaking'); } };
+    timers.push(setTimeout(begin, 4000)); // some browsers never report the start
+    Voice.speak([ch.headline].concat(ch.explain).join(' '), begin,
+      function () { if (state.voice === 'speaking' || state.voice === 'loading') { setVoice('done'); } });
   }
   else if (act === 'how') { go('welcome'); render(); }
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
