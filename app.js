@@ -145,7 +145,7 @@ function setVoice(v) {
   var el = document.getElementById('speak');
   if (el) {
     el.setAttribute('data-voice', v);
-    el.setAttribute('aria-label', v === 'speaking' || v === 'loading' ? 'Stop reading' : 'Read this explanation aloud');
+    el.setAttribute('aria-label', v === 'speaking' || v === 'loading' ? 'Stop reading' : 'Read this aloud');
   }
 }
 function hushVoice() {
@@ -231,7 +231,9 @@ CONTENT.chapters['1a'] = {
   demoLabel: 'Hear a home chord',
   demo: function () { light(C_MAJOR.notes, 'C major: C, E, G'); Sound.chord(C_MAJOR.notes, 2); },
   toListen: 'Next: listen to two songs',
-  listenIntro: 'Two songs that stay on one chord, from start to finish.',
+  listenIntro: 'Now hear it in real songs. These two stay on one chord, from start to finish. Play each groove, and listen for the feeling of staying home.',
+  // The character reads the Listen instruction aloud, from a small strip at the top of the step.
+  listenVoice: { audio: 'voice-1a-listen.mp3' },
   songs: [
     // To confirm with Troy: this recording seems to stay on one plain major chord.
     { title: 'Are You Sleeping? (Fr\u00e8re Jacques)', artist: 'Traditional', kind: 'Major home',
@@ -724,7 +726,9 @@ function chapterHtml() {
     h += '<button type="button" class="btn ' + (state.swapped ? 'ready' : 'primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(state.demoPlayed ? 'Hear it again' : ch.demoLabel) + '</button>' +
       '<div class="grow"></div><button type="button" class="btn' + (state.swapped ? ' primary' : ready ? ' ready' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
   } else if (state.step === 1) {
-    h += '<p>' + esc(ch.listenIntro) + '</p>';
+    if (ch.listenVoice && (ch.listenVoice.audio || Voice.supported)) {
+      h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.listenIntro) + '</span></button>';
+    } else { h += '<p>' + esc(ch.listenIntro) + '</p>'; }
     ch.songs.forEach(function (s, i) {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
         (s.note ? '<div class="small muted">' + esc(s.note) + '</div>' : '') +
@@ -825,6 +829,18 @@ function bubbleSvg(v) {
     '<path d="M' + (x + 3) + ' ' + (y - 17) + ' L' + (x + 12) + ' ' + (y - 10) + ' L' + (x + 2) + ' ' + (y - 5) + ' Z" fill="#0F1724"></path></g></g>';
 }
 
+/* The small guide: the character's head with its speech bubble, for steps that have no scene picture. */
+function guideSvg() {
+  return '<svg aria-hidden="true" width="90" height="60" viewBox="0 0 150 100">' +
+    '<line x1="128" y1="70" x2="128" y2="10" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line>' +
+    '<path d="M128 10 C130 26 148 30 143 50 C143 38 135 33 128 31 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path>' +
+    '<ellipse cx="108" cy="76" rx="24" ry="19" transform="rotate(-18 108 76)" fill="#F5B841"></ellipse>' +
+    '<circle cx="100" cy="72" r="2.6" fill="#1A1300"></circle><circle cx="113" cy="68" r="2.6" fill="#1A1300"></circle>' +
+    '<path class="smile" d="M101 82 Q109 88 118 79" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path>' +
+    '<ellipse class="mouth" cx="109" cy="82" rx="5" ry="4" fill="#1A1300" transform="rotate(-18 109 82)"></ellipse>' +
+    bubbleSvg({ cx: 42, cy: 34, tail: 'M66 52 L92 66 L56 56 Z' }) + '</svg>';
+}
+
 /* Choose step: first "Listening..." while the question plays, then the answers light up as the next action. */
 var listenTimer = null;
 function syncListening() {
@@ -842,6 +858,9 @@ function askQuestion(ch) {
 }
 
 function render(focusId) {
+  // The voice state belongs to one step: a new step starts with a fresh bubble.
+  var voiceKey = state.view + ':' + state.chapter + ':' + state.step;
+  if (state.voiceFor !== voiceKey) { state.voiceFor = voiceKey; if (state.voice !== 'idle') { Voice.stop(); state.voice = 'idle'; } }
   view.innerHTML = state.view === 'welcome' ? welcomeHtml() : state.view === 'path' ? pathHtml() : chapterHtml();
   if (focusId) { var el = document.getElementById(focusId); if (el) { el.focus({ preventScroll: true }); } }
 }
@@ -873,9 +892,11 @@ view.addEventListener('click', function (e) {
     setVoice('loading');
     var begin = function () { if (state.voice === 'loading') { setVoice('speaking'); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
-    var words = [ch.headline].concat(ch.explain).join(' ');
+    var listening = state.step === 1;
+    var clipUrl = listening ? ch.listenVoice.audio : ch.voice.audio;
+    var words = listening ? ch.listenIntro : [ch.headline].concat(ch.explain).join(' ');
     var finish = function () { if (state.voice === 'speaking' || state.voice === 'loading') { setVoice('done'); } };
-    if (ch.voice.audio) { Voice.play(ch.voice.audio, words, begin, finish); } else { Voice.speak(words, begin, finish); }
+    if (clipUrl) { Voice.play(clipUrl, words, begin, finish); } else { Voice.speak(words, begin, finish); }
   }
   else if (act === 'how') { go('welcome'); render(); }
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
