@@ -61,8 +61,8 @@ var Sound = (function () {
 var Progress = (function () {
   var KEY = 'homekey.progress.v2';
   function load() {
-    try { var p = JSON.parse(localStorage.getItem(KEY)); if (p && Array.isArray(p.done)) { return p; } } catch (e) {}
-    return { done: [] };
+    try { var p = JSON.parse(localStorage.getItem(KEY)); if (p && Array.isArray(p.done)) { if (!p.steps || typeof p.steps !== 'object') { p.steps = {}; } return p; } } catch (e) {}
+    return { done: [], steps: {} };
   }
   var data = load();
   function save() { try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) {} }
@@ -70,7 +70,10 @@ var Progress = (function () {
     isDone: function (id) { return data.done.indexOf(id) >= 0; },
     count: function () { return data.done.length; },
     complete: function (id) { if (data.done.indexOf(id) < 0) { data.done.push(id); save(); } },
-    reset: function () { data = { done: [] }; save(); }
+    // The furthest step reached inside a chapter (0 to 4), so a half-done chapter can be picked up again.
+    reached: function (id) { return Number(data.steps[id]) || 0; },
+    reach: function (id, step) { if (step > (Number(data.steps[id]) || 0)) { data.steps[id] = step; save(); } },
+    reset: function () { data = { done: [], steps: {} }; save(); }
   };
 })();
 
@@ -878,6 +881,7 @@ function askQuestion(ch) {
 function render(focusId) {
   // The voice state belongs to one step: a new step starts with a fresh bubble.
   var voiceKey = state.view + ':' + state.chapter + ':' + state.step;
+  if (state.view === 'chapter') { Progress.reach(state.chapter, state.maxStep); }
   if (state.voiceFor !== voiceKey) { state.voiceFor = voiceKey; if (state.voice !== 'idle') { Voice.stop(); state.voice = 'idle'; } }
   view.innerHTML = state.view === 'welcome' ? welcomeHtml() : state.view === 'path' ? pathHtml() : chapterHtml();
   if (focusId) { var el = document.getElementById(focusId); if (el) { el.focus({ preventScroll: true }); } }
@@ -891,7 +895,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
