@@ -55,6 +55,8 @@ h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 30px; 
 
 /* Buttons */
 .btn { min-height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); font-size: 16px; font-weight: 700; padding: 10px 16px; cursor: pointer; }
+.btn.ready { border-color: var(--accent); color: var(--accent); }
+#next, #demo { transition: border-color 1s ease, color 1s ease, background-color 1s ease; }
 .btn.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .btn.quiet { min-height: 44px; border-color: transparent; background: transparent; color: var(--muted); font-size: 14px; padding: 8px 10px; }
 .btn:hover { filter: brightness(1.08); }

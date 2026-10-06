@@ -81,8 +81,13 @@ function stopAll() {
   timers = [];
   Sound.stop();
 }
+var lastPlayLen = 0;   // seconds of sound started by the latest playBeats call
+var swapTimer = null;  // trades the looks of the demo and "Next" buttons after three plays
+var nextTimer = null;  // highlights "Next" on the Explain step
+var NEXT_PAUSE = 4;    // seconds of quiet after the first demo before "Next" is highlighted
 function playBeats(beats, beatDur, style) {
   stopAll();
+  lastPlayLen = beats.length * beatDur;
   Sound.beats(beats, beatDur, style);
   beats.forEach(function (b, i) {
     if (i > 0 && beats[i - 1].caption === b.caption) { return; }
@@ -625,10 +630,12 @@ function chapterHtml() {
     if (ch.headline) { h += '<p class="idea">' + esc(ch.headline) + '</p>'; }
     if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
     ch.explain.forEach(function (p) { h += '<p>' + esc(p) + '</p>'; });
-    // Listening comes first: the demo is the bright button until it has been played, then "Next" takes over.
-    var heard = state.heardDemo || state.maxStep > 0;
-    h += '<button type="button" class="btn' + (heard ? '' : ' primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(ch.demoLabel) + '</button>' +
-      '<div class="grow"></div><button type="button" class="btn' + (heard ? ' primary' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
+    // Listening comes first and is never rushed: the demo stays the bright button. "Next" is only
+    // outlined in yellow, a few seconds after the first demo has finished playing.
+    var ready = state.nextReady || state.maxStep > 0;
+    // After three plays the two buttons trade looks, and "Next" becomes the main action.
+    h += '<button type="button" class="btn ' + (state.swapped ? 'ready' : 'primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(state.demoPlayed ? 'Hear it again' : ch.demoLabel) + '</button>' +
+      '<div class="grow"></div><button type="button" class="btn' + (state.swapped ? ' primary' : ready ? ' ready' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
   } else if (state.step === 1) {
     h += '<p>' + esc(ch.listenIntro) + '</p>';
     ch.songs.forEach(function (s, i) {
@@ -705,7 +712,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.heardDemo = false; state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.demoCount = 0; state.swapped = false; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -726,10 +733,32 @@ view.addEventListener('click', function (e) {
   else if (act === 'reset-no') { state.askReset = false; render('reset-ask'); }
   else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); state.askReset = false; go('welcome'); render(); }
   else if (act === 'demo') {
-    stopAll(); ch.demo();
-    state.heardDemo = true;
-    var nx = document.getElementById('next'); if (nx) { nx.classList.add('primary'); }
-    el.classList.remove('primary');
+    stopAll(); lastPlayLen = 2; ch.demo();
+    if (!state.demoPlayed) {
+      state.demoPlayed = true;
+      el.innerHTML = '<span aria-hidden="true">\uD83D\uDD0A </span>Hear it again';
+      var forChapter = state.chapter;
+      clearTimeout(nextTimer);
+      nextTimer = setTimeout(function () {
+        if (state.chapter !== forChapter || state.view !== 'chapter' || state.swapped) { return; }
+        state.nextReady = true;
+        var nx = document.getElementById('next');
+        if (nx && state.step === 0) { nx.classList.add('ready'); }
+      }, (lastPlayLen + NEXT_PAUSE) * 1000);
+    }
+    state.demoCount += 1;
+    if (state.demoCount === 3 && !state.swapped) {
+      var swapFor = state.chapter;
+      clearTimeout(swapTimer);
+      swapTimer = setTimeout(function () {
+        if (state.chapter !== swapFor || state.view !== 'chapter') { return; }
+        state.swapped = true;
+        if (state.step !== 0) { return; }
+        var nx = document.getElementById('next'), dm = document.getElementById('demo');
+        if (nx) { nx.classList.remove('ready'); nx.classList.add('primary'); }
+        if (dm) { dm.classList.remove('primary'); dm.classList.add('ready'); }
+      }, (lastPlayLen + 1) * 1000);
+    }
   }
   else if (act === 'song') { var s = ch.songs[Number(el.getAttribute('data-i'))]; playBeats(s.beats, s.beatDur, s.style || 'groove'); }
   else if (act === 'next') {
