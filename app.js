@@ -617,13 +617,17 @@ function chapterHtml() {
   var h = '<div class="topbar"><button type="button" class="btn quiet" id="back" data-act="back">&larr; Your path</button>' +
     '<div class="eyebrow">Section 1 · ' + esc(CONTENT.section1.short) + ' · ' + state.chapter + '</div></div>';
   h += '<h1>' + esc(ch.title) + '</h1>';
-  h += '<div class="chips">';
+  // Progress line: finished steps are checked and tappable, the current step has a yellow ring.
+  // No filled yellow here: that look is reserved for the next action inside the card.
+  var reached = Math.max(state.step, state.maxStep);
+  h += '<div class="stepper"><div class="line">';
   STEPS.forEach(function (s, i) {
-    var inner = '<span aria-hidden="true">' + s.icon + '</span><span class="lbl">' + s.label + '</span>';
-    if (i === state.step) { h += '<div class="chip active" aria-current="step">' + inner + '</div>'; }
-    else if (i <= state.maxStep) { h += '<button type="button" class="chip done" id="chip-' + i + '" data-act="goto" data-step="' + i + '" aria-label="Go to ' + s.label + '">' + inner + '</button>'; }
-    else { h += '<div class="chip" aria-label="' + s.label + ', not reached yet">' + inner + '</div>'; }
+    if (i > 0) { h += '<div class="seg' + (i <= reached ? ' done' : '') + '"></div>'; }
+    if (i === state.step) { h += '<div class="stop" aria-current="step" aria-label="Step ' + (i + 1) + ', ' + s.label + '"><span class="dot active">' + (i + 1) + '</span></div>'; }
+    else if (i <= state.maxStep) { h += '<button type="button" class="stop" id="chip-' + i + '" data-act="goto" data-step="' + i + '" aria-label="Go to step ' + (i + 1) + ', ' + s.label + '"><span class="dot done">\u2713</span></button>'; }
+    else { h += '<div class="stop" aria-label="Step ' + (i + 1) + ', ' + s.label + ', not reached yet"><span class="dot">' + (i + 1) + '</span></div>'; }
   });
+  h += '</div><div class="cap">Step ' + (state.step + 1) + ' of ' + STEPS.length + ' \u00B7 <b><span aria-hidden="true">' + STEPS[state.step].icon + ' </span>' + STEPS[state.step].label + '</b></div>';
   h += '</div><section class="card step" aria-live="polite">';
 
   if (state.step === 0) {

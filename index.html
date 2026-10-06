@@ -89,14 +89,18 @@ button.node-label[style*="text-align: right"] { align-items: flex-end; }
 
 /* Chapter */
 .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.chips { display: flex; gap: 6px; }
-.chip { flex: 1; min-width: 0; height: 40px; box-sizing: border-box; border-radius: 20px; border: 1.5px solid var(--line); background: transparent; padding: 0; color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 14px; font-weight: 700; }
-.chip.done { border-color: var(--ok); color: var(--ok); }
-button.chip { cursor: pointer; }
-button.chip:hover { background: var(--ok-bg); }
-.chip.active { flex: 2.2; border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
-.chip .lbl { display: none; }
-.chip.active .lbl { display: inline; }
+.stepper { display: flex; flex-direction: column; gap: 2px; }
+.stepper .line { display: flex; align-items: center; margin: 0 -9px; }
+.stop { flex: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: none; border: 0; padding: 0; }
+button.stop { cursor: pointer; }
+.dot { width: 26px; height: 26px; box-sizing: border-box; border-radius: 13px; border: 2px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: var(--muted); }
+.dot.done { border-color: var(--ok); color: var(--ok); }
+button.stop:hover .dot { background: var(--ok-bg); }
+.dot.active { border-color: var(--accent); color: var(--accent); box-shadow: 0 0 0 4px rgba(245, 184, 65, 0.18); }
+.seg { flex: 1; height: 2px; margin: 0 -9px; background: var(--line); }
+.seg.done { background: var(--ok); }
+.cap { font-size: 14px; font-weight: 700; color: var(--muted); }
+.cap b { color: var(--fg); }
 .step { min-height: 330px; }
 .step p { margin: 0; }
 .step p.idea { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1.15; text-wrap: balance; }
