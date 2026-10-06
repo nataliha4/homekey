@@ -615,7 +615,7 @@ function setWelcomed(on) { try { if (on) { localStorage.setItem(WELCOME_KEY, '1'
 function welcomeHtml() {
   var h = '<div class="stack" style="gap: 14px"><h1>Music has logic, like math. Understand it, and you can play the songs you love by ear.</h1>' +
     '<p class="lead">Hear a new favorite? Recognize its patterns, with no sheet music in front of you.</p></div>';
-  h += '<div class="card"><h2>How it works</h2><p class="muted" style="margin: 0">Every chapter teaches one small idea, in five short steps. Take them in order:</p><ol class="how">';
+  h += '<div class="card welcome-card"><svg class="greeter" aria-hidden="true" viewBox="0 0 84 130"><line x1="56" y1="86" x2="56" y2="14" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M56 14 C58 32 80 36 74 60 C74 46 64 40 56 38 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><path d="M16 88 L5 72" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path><ellipse cx="34" cy="94" rx="27" ry="21" transform="rotate(-18 34 94)" fill="#F5B841"></ellipse><circle cx="25" cy="90" r="2.8" fill="#1A1300"></circle><circle cx="40" cy="86" r="2.8" fill="#1A1300"></circle><path d="M26 100 Q35 107 45 97" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M24 112 L22 126" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path><path d="M42 111 L42 126" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path></svg><h2>How it works</h2><p class="muted" style="margin: 0">Every chapter teaches one small idea, in five short steps. Take them in order:</p><ol class="how">';
   [['\uD83D\uDCA1', 'Explain', 'Read one short idea.'],
    ['\uD83C\uDFB5', 'Listen', 'Hear it in songs you know.'],
    ['\uD83E\uDD14', 'Choose', 'Test your ear with quick questions.'],
@@ -625,7 +625,7 @@ function welcomeHtml() {
   });
   h += '</ol></div>';
   h += '<div class="stack" style="gap: 10px"><button type="button" class="btn primary" id="start" data-act="start">Start</button>' +
-    '<div class="small muted" style="text-align: center">No account needed. Turn your sound on: your first chord is one minute away.</div></div>';
+    '<div class="small muted" style="text-align: center; text-wrap: balance">No account needed. Turn your sound on: your first chord is one minute away.</div></div>';
   return h;
 }
 
