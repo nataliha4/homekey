@@ -59,7 +59,7 @@ var Sound = (function () {
 
 /* ---------- Progress: saved on this device ---------- */
 var Progress = (function () {
-  var KEY = 'homekey.progress.v1';
+  var KEY = 'homekey.progress.v2';
   function load() {
     try { var p = JSON.parse(localStorage.getItem(KEY)); if (p && Array.isArray(p.done)) { return p; } } catch (e) {}
     return { done: [] };
@@ -103,20 +103,21 @@ var A_BED = { notes: [60, 64, 69], bass: 45, caption: 'The Bedroom: A minor (A, 
 var NOTE_NAMES = { 60: 'C', 62: 'D', 64: 'E', 65: 'F', 67: 'G', 69: 'A' };
 
 var CONTENT = {
-  totalChapters: 52,
+  totalChapters: 53,
   section1: {
     title: 'Home Sweet Home',
     short: 'Home',
     blurb: 'From one chord to four.',
     chapters: [
-      { id: '1a', title: 'One chord: home', sub: 'Major and minor' },
-      { id: '1b', title: 'Two chords: the door', sub: 'Home (I) and the door (V)' },
-      { id: '1c', title: 'The door, easy to spot', sub: 'The V7 chord' },
-      { id: '1d', title: 'Three chords: the garden', sub: 'I, IV and V7' },
-      { id: '1e', title: 'Four chords: the bedroom', sub: 'The vi chord, in a major home' },
-      { id: '1f', title: 'The door, without its seventh', sub: 'Plain V returns' },
-      { id: '1g', title: 'The four-chord loop', sub: 'I, V, vi, IV' },
-      { id: '1h', title: 'The same four, reordered', sub: 'I, vi, IV, V' }
+      { id: '1a', title: 'One chord: home', sub: 'A whole song on one chord' },
+      { id: '1b', title: 'Home can be dark', sub: 'Major and minor' },
+      { id: '1c', title: 'Two chords: the door', sub: 'Home (I) and the door (V)' },
+      { id: '1d', title: 'The door, easy to spot', sub: 'The V7 chord' },
+      { id: '1e', title: 'Three chords: the garden', sub: 'I, IV and V7' },
+      { id: '1f', title: 'Four chords: the bedroom', sub: 'The vi chord, in a major home' },
+      { id: '1g', title: 'The door, without its seventh', sub: 'Plain V returns' },
+      { id: '1h', title: 'The four-chord loop', sub: 'I, V, vi, IV' },
+      { id: '1i', title: 'The same four, reordered', sub: 'I, vi, IV, V' }
     ]
   },
   comingUp: [
@@ -144,20 +145,78 @@ CONTENT.chapters['1a'] = {
   ],
   demoLabel: 'Hear a home chord',
   demo: function () { light(C_MAJOR.notes, 'C major: C, E, G'); Sound.chord(C_MAJOR.notes, 2); },
-  toListen: 'Next: listen to three songs',
-  listenIntro: 'Three songs that stay on one chord. Two homes are bright, one is dark.',
+  toListen: 'Next: listen to two songs',
+  listenIntro: 'Two songs that stay on one chord, from start to finish.',
   songs: [
     // To confirm with Troy: this recording seems to stay on one plain major chord.
     { title: 'Are You Sleeping? (Fr\u00e8re Jacques)', artist: 'Traditional', kind: 'Major home',
       url: 'https://open.spotify.com/track/67m0guhBCj1j9MTVSPus15',
       beats: repeat({ notes: [60, 64, 67], bass: 48, caption: 'One chord the whole way: C major' }, 8), beatDur: 0.75 },
     { title: 'Coconut', artist: 'Harry Nilsson', kind: 'Major home',
-      note: 'You may hear one extra, spicy note in this chord. Ignore it for now: we\'ll meet it in chapter 1c.',
+      note: 'You may hear one extra, spicy note in this chord. Ignore it for now: we\'ll meet it in chapter 1d.',
       url: 'https://open.spotify.com/search/Coconut%20Harry%20Nilsson',
-      beats: repeat({ notes: [60, 64, 67, 70], bass: 48, caption: 'One chord the whole way: C7 (major)' }, 8), beatDur: 0.75 },
+      beats: repeat({ notes: [60, 64, 67, 70], bass: 48, caption: 'One chord the whole way: C7 (major)' }, 8), beatDur: 0.75 }
+  ],
+  rounds: 10,
+  choose: {
+    prompt: 'Listen to four chords. Did the music stay home, or leave?',
+    replay: 'Hear the chords again',
+    options: [{ q: 'stay', label: 'Stayed home', sub: 'one chord' }, { q: 'leave', label: 'Left home', sub: 'the chord changed' }],
+    make: function (prev) {
+      var roots = [60, 62, 65, 67];
+      var root = pick(roots);
+      if (prev && prev.root === root) { root = roots[(roots.indexOf(root) + 1) % roots.length]; }
+      var home = { notes: [root, root + 4, root + 7], bass: root - 12, caption: 'Home' };
+      var up = Math.random() < 0.5 ? 5 : 7;
+      var away = { notes: [root + up - 12, root + up - 8, root + up - 5], bass: root + up - 24, caption: 'Away from home' };
+      var q = Math.random() < 0.5 ? 'stay' : 'leave';
+      var shape = q === 'stay' ? 'HHHH' : pick(['HHAH', 'HAAH', 'HAHH', 'HHAA']);
+      var beats = shape.split('').map(function (c) { return c === 'H' ? home : away; });
+      return { root: root, q: q, beats: beats };
+    },
+    play: function (cur) { stopAll(); Sound.beats(cur.beats, 0.8, 'block'); },
+    reveal: function (cur) { playBeats(cur.beats, 0.8, 'block'); },
+    verdict: function (cur, good) {
+      return (good ? 'Correct: ' : 'Not quite: ') + (cur.q === 'stay' ? 'the music stayed home.' : 'the music left home.') + ' Watch the keyboard as it plays again.';
+    }
+  },
+  play: {
+    paras: [
+      'Now you. Find <strong>C major</strong> on your piano: C, E and G, as lit on the keyboard below.',
+      'Start the groove and play the chord along with it, in any rhythm you like.'
+    ],
+    start: function () { playBeats(repeat(C_MAJOR, 8), 0.75, 'groove'); },
+    ready: function () { light(C_MAJOR.notes, 'C major: C, E, G'); }
+  },
+  recap: [
+    'A song can stay on one chord. That chord is home.',
+    'Home is where the music feels at rest.',
+    'When the chord changes, the music has left home.'
+  ]
+};
+
+CONTENT.chapters['1b'] = {
+  title: 'Home can be dark',
+  scene: '<svg role="img" aria-label="An eighth note on a couch between two windows: a sunny one and a moonlit one" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="40" y="30" width="44" height="40" rx="3" fill="#1E4A50" stroke="#4A5E7E" stroke-width="3"></rect><circle cx="62" cy="50" r="9" fill="#F5B841"></circle><rect x="236" y="30" width="44" height="40" rx="3" fill="#0B111B" stroke="#4A5E7E" stroke-width="3"></rect><circle cx="258" cy="50" r="9" fill="#F4F1EA"></circle><circle cx="262" cy="47" r="8" fill="#0B111B"></circle><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  // Placeholder text, to be rewritten by Troy in his own voice.
+  headline: 'Home can be bright or dark.',
+  explain: [
+    'A home chord comes in two colors. Major sounds bright. Minor sounds dark.',
+    'Only one note differs between them: the middle one. Watch it move on the keyboard.'
+  ],
+  demoLabel: 'Hear bright, then dark',
+  demo: function () { playBeats([{ notes: C_MAJOR.notes, bass: 48, caption: 'C major: C, E, G' }, { notes: C_MINOR.notes, bass: 48, caption: 'C minor: C, E flat, G' }], 1.6, 'block'); },
+  toListen: 'Next: listen to two songs',
+  listenIntro: 'Two songs with a dark home. Each one stays on a single minor chord.',
+  songs: [
     { title: 'Carol of the Bells', artist: 'Mykola Leontovych', kind: 'Minor home',
       url: 'https://open.spotify.com/search/Carol%20of%20the%20Bells',
-      beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 12), beatDur: 0.75, style: 'waltz' }
+      beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 12), beatDur: 0.75, style: 'waltz' },
+    // To confirm against a recording: widely described as a one-chord song (C minor 7).
+    { title: 'Chain of Fools', artist: 'Aretha Franklin', kind: 'Minor home',
+      note: 'This chord also carries one extra note. Ignore it for now.',
+      url: 'https://open.spotify.com/search/Chain%20of%20Fools%20Aretha%20Franklin',
+      beats: repeat({ notes: [60, 63, 67, 70], bass: 48, caption: 'One chord the whole way: C minor 7' }, 8), beatDur: 0.75 }
   ],
   rounds: 10,
   choose: {
@@ -177,20 +236,20 @@ CONTENT.chapters['1a'] = {
   },
   play: {
     paras: [
-      'Now you. Find <strong>C major</strong> on your piano: C, E and G, as lit on the keyboard below.',
-      'Start the groove and play the chord along with it, in any rhythm you like.'
+      'Now you. Start from C major (C, E, G), then lower the middle note to the black key on its left. That is <strong>C minor</strong>.',
+      'Start the groove and play C minor along with it, in any rhythm you like.'
     ],
-    start: function () { playBeats(repeat(C_MAJOR, 8), 0.75, 'groove'); },
-    ready: function () { light(C_MAJOR.notes, 'C major: C, E, G'); }
+    start: function () { playBeats(repeat(C_MINOR, 8), 0.75, 'groove'); },
+    ready: function () { light(C_MINOR.notes, 'C minor: C, E flat, G'); }
   },
   recap: [
-    'A song can stay on one chord. That chord is home.',
+    'Home can be major or minor.',
     'Major sounds bright. Minor sounds dark.',
     'Only one note differs between them: the middle one.'
   ]
 };
 
-CONTENT.chapters['1b'] = {
+CONTENT.chapters['1c'] = {
   title: 'Two chords: the door',
   scene: '<svg role="img" aria-label="An eighth note with a face opening a door and looking outside" viewBox="0 0 320 220" width="100%" style="display: block"><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="176" y="34" width="92" height="156" fill="#12333A"></rect><circle cx="246" cy="66" r="9" fill="#F4F1EA"></circle><path d="M222 190 L222 150 Q240 132 268 146 L268 190 Z" fill="#1E4A50"></path><path d="M222 190 L268 190 L296 212 L196 212 Z" fill="#F5B841" opacity="0.3"></path><rect x="176" y="34" width="92" height="156" fill="none" stroke="#4A5E7E" stroke-width="5"></rect><path d="M176 34 L222 46 L222 202 L176 190 Z" fill="#3A4C69" stroke="#4A5E7E" stroke-width="3" stroke-linejoin="round"></path><circle cx="208" cy="141" r="4" fill="#F4F1EA"></circle><line x1="150" y1="142" x2="150" y2="68" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M150 68 C152 86 174 90 168 114 C168 100 158 94 150 92 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="128" cy="150" rx="27" ry="21" transform="rotate(-18 128 150)" fill="#F5B841"></ellipse><circle cx="126" cy="146" r="2.8" fill="#1A1300"></circle><circle cx="141" cy="142" r="2.8" fill="#1A1300"></circle><path d="M124 157 Q133 163 142 154" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M152 152 L204 142" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path><path d="M120 169 L118 188 L110 188" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M138 168 L140 188 L148 188" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
@@ -254,7 +313,7 @@ CONTENT.chapters['1b'] = {
   ]
 };
 
-CONTENT.chapters['1c'] = {
+CONTENT.chapters['1d'] = {
   title: 'The door, easy to spot',
   scene: '<svg role="img" aria-label="An eighth note with a face switching on a lamp above a slightly open door" viewBox="0 0 320 220" width="100%" style="display: block"><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="196" y="60" width="88" height="130" fill="#12333A"></rect><circle cx="264" cy="88" r="8" fill="#F4F1EA"></circle><path d="M238 190 L238 156 Q256 140 284 152 L284 190 Z" fill="#1E4A50"></path><path d="M238 190 L284 190 L308 212 L214 212 Z" fill="#F5B841" opacity="0.3"></path><rect x="196" y="60" width="88" height="130" fill="none" stroke="#4A5E7E" stroke-width="5"></rect><path d="M196 60 L238 72 L238 202 L196 190 Z" fill="#4E6490" stroke="#6C83AE" stroke-width="3" stroke-linejoin="round"></path><circle cx="228" cy="138" r="4" fill="#F4F1EA"></circle><path d="M226 42 Q240 24 254 42 Z" fill="#4A5E7E"></path><circle cx="240" cy="46" r="8" fill="#F5B841"></circle><g stroke="#F5B841" stroke-width="3" stroke-linecap="round"><line x1="222" y1="46" x2="213" y2="46"></line><line x1="258" y1="46" x2="267" y2="46"></line><line x1="226" y1="34" x2="220" y2="28"></line><line x1="254" y1="34" x2="260" y2="28"></line></g><rect x="161" y="106" width="14" height="22" rx="3" fill="none" stroke="#4A5E7E" stroke-width="3"></rect><rect x="165" y="111" width="6" height="12" rx="2" fill="#F4F1EA"></rect><line x1="132" y1="142" x2="132" y2="68" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M132 68 C134 86 156 90 150 114 C150 100 140 94 132 92 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="110" cy="150" rx="27" ry="21" transform="rotate(-18 110 150)" fill="#F5B841"></ellipse><circle cx="108" cy="146" r="2.8" fill="#1A1300"></circle><circle cx="123" cy="142" r="2.8" fill="#1A1300"></circle><path d="M106 157 Q115 163 124 154" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M134 150 L164 124" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path><path d="M102 169 L100 188 L92 188" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M120 168 L122 188 L130 188" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
@@ -311,7 +370,7 @@ CONTENT.chapters['1c'] = {
   ]
 };
 
-CONTENT.chapters['1d'] = {
+CONTENT.chapters['1e'] = {
   title: 'Three chords: the garden',
   scene: '<svg role="img" aria-label="An eighth note with a face standing in the garden outside the house, next to a tree and flowers" viewBox="0 0 320 220" width="100%" style="display: block"><circle cx="206" cy="40" r="9" fill="#F4F1EA"></circle><rect x="22" y="78" width="84" height="100" fill="#2B3A52"></rect><path d="M12 80 L64 40 L116 80 Z" fill="#3A4C69"></path><rect x="50" y="112" width="30" height="62" fill="#F5B841" opacity="0.6"></rect><rect x="50" y="112" width="30" height="62" fill="none" stroke="#4A5E7E" stroke-width="4"></rect><rect x="255" y="112" width="10" height="62" fill="#4A5E7E"></rect><circle cx="260" cy="96" r="34" fill="#2F6F6A"></circle><path d="M0 178 Q160 160 320 178 L320 220 L0 220 Z" fill="#1E4A50"></path><g stroke="#6AD1C7" stroke-width="3" stroke-linecap="round"><line x1="204" y1="186" x2="204" y2="174"></line><line x1="222" y1="192" x2="222" y2="180"></line><line x1="106" y1="190" x2="106" y2="178"></line></g><circle cx="204" cy="171" r="5" fill="#F4F1EA"></circle><circle cx="222" cy="177" r="5" fill="#F5B841"></circle><circle cx="106" cy="175" r="5" fill="#F4F1EA"></circle><line x1="172" y1="138" x2="172" y2="64" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M172 64 C174 82 196 86 190 110 C190 96 180 90 172 88 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="150" cy="146" rx="27" ry="21" transform="rotate(-18 150 146)" fill="#F5B841"></ellipse><circle cx="148" cy="142" r="2.8" fill="#1A1300"></circle><circle cx="163" cy="138" r="2.8" fill="#1A1300"></circle><path d="M146 153 Q155 159 164 150" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M142 165 L140 184 L132 184" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M160 164 L162 184 L170 184" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
@@ -383,7 +442,7 @@ CONTENT.chapters['1d'] = {
   ]
 };
 
-CONTENT.chapters['1e'] = {
+CONTENT.chapters['1f'] = {
   title: 'Four chords: the bedroom',
   scene: '<svg role="img" aria-label="An eighth note with a face sitting up in bed with its eyes closed, in a dark bedroom with the moon in the window" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="216" y="36" width="64" height="56" fill="#12333A" stroke="#4A5E7E" stroke-width="4"></rect><circle cx="262" cy="56" r="8" fill="#F4F1EA"></circle><line x1="248" y1="36" x2="248" y2="92" stroke="#4A5E7E" stroke-width="3"></line><line x1="216" y1="64" x2="280" y2="64" stroke="#4A5E7E" stroke-width="3"></line><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="60" y="92" width="16" height="98" rx="4" fill="#44587A"></rect><rect x="244" y="132" width="12" height="58" rx="4" fill="#44587A"></rect><rect x="70" y="140" width="180" height="30" rx="8" fill="#3A4C69"></rect><ellipse cx="108" cy="136" rx="26" ry="10" fill="#C9D2E0"></ellipse><line x1="134" y1="108" x2="134" y2="38" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M134 38 C136 56 158 60 152 84 C152 70 142 64 134 62 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="112" cy="116" rx="27" ry="21" transform="rotate(-18 112 116)" fill="#F5B841"></ellipse><path d="M104 113 Q108 116 112 112" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M119 109 Q123 112 127 108" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M110 124 Q117 128 124 122" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M96 132 Q170 116 250 134 L250 164 Q170 172 96 164 Z" fill="#2F6F6A"></path><g fill="#A9B4C6" font-family="sans-serif" font-weight="700"><text x="166" y="92" font-size="16">z</text><text x="180" y="76" font-size="20">z</text><text x="198" y="58" font-size="24">z</text></g></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.

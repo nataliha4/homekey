@@ -4,7 +4,7 @@ A small web app for learning music harmony by ear, built by Natalie with her pia
 
 ## Status
 
-Section 1, "Home Sweet Home": chapters 1a to 1e are built (home, the door, the door with its 7th, the garden, the bedroom). Chapters 1f to 1h and Sections 2 to 10 are planned.
+Section 1, "Home Sweet Home": chapters 1a to 1f are built (home, bright and dark homes, the door, the door with its 7th, the garden, the bedroom). Chapters 1g to 1i and Sections 2 to 10 are planned.
 
 ## Files
 
