@@ -76,10 +76,57 @@ var Progress = (function () {
 
 /* ---------- Playback with the keyboard lighting up in time ---------- */
 var timers = [];
+/* ---------- Voice: the character reads the explanation aloud ----------
+   Stand-in: the device's built-in voice. Swap speak() for recorded audio later. */
+var Voice = (function () {
+  var synth = null;
+  try { if ('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') { synth = window.speechSynthesis; } } catch (e) {}
+  var current = null; // keeps the utterance alive while it speaks
+  var token = 0;
+  function pickVoice() {
+    try {
+      var all = synth.getVoices() || [];
+      var us = all.filter(function (v) { return /^en[-_]US/i.test(v.lang); });
+      var en = all.filter(function (v) { return /^en/i.test(v.lang); });
+      return us.filter(function (v) { return v.default; })[0] || us[0] || en[0] || null;
+    } catch (e) { return null; }
+  }
+  return {
+    supported: !!synth,
+    speak: function (text, onDone) {
+      if (!synth) { return; }
+      var mine = ++token;
+      try {
+        synth.cancel();
+        var u = new SpeechSynthesisUtterance(text);
+        var v = pickVoice(); if (v) { u.voice = v; }
+        u.lang = 'en-US'; u.rate = 0.95;
+        u.onend = u.onerror = function () { if (mine === token) { current = null; onDone(); } };
+        current = u;
+        synth.speak(u);
+      } catch (e) { onDone(); }
+    },
+    stop: function () { token += 1; current = null; try { if (synth) { synth.cancel(); } } catch (e) {} }
+  };
+})();
+function setVoice(v) {
+  state.voice = v;
+  var el = document.getElementById('speak');
+  if (el) {
+    el.setAttribute('data-voice', v);
+    el.setAttribute('aria-label', v === 'speaking' ? 'Stop reading' : 'Read this explanation aloud');
+  }
+}
+function hushVoice() {
+  Voice.stop();
+  if (typeof state !== 'undefined' && state.voice === 'speaking') { setVoice('idle'); }
+}
+
 function stopAll() {
   timers.forEach(function (t) { clearTimeout(t); });
   timers = [];
   Sound.stop();
+  hushVoice();
 }
 var lastPlayLen = 0;   // seconds of sound started by the latest playBeats call
 var swapTimer = null;  // trades the looks of the demo and "Next" buttons after three plays
@@ -141,9 +188,11 @@ var CONTENT = {
 
 CONTENT.chapters['1a'] = {
   title: 'One chord: home',
-  scene: '<svg role="img" aria-label="An eighth note with a face sitting on a couch" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="236" y="36" width="44" height="34" rx="3" fill="none" stroke="#4A5E7E" stroke-width="3"></rect><path d="M244 62 L254 50 L262 58 L268 52 L274 62 Z" fill="#4A5E7E"></path><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  scene: '<svg role="img" aria-label="An eighth note with a face sitting on a couch" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="236" y="36" width="44" height="34" rx="3" fill="none" stroke="#4A5E7E" stroke-width="3"></rect><path d="M244 62 L254 50 L262 58 L268 52 L274 62 Z" fill="#4A5E7E"></path><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path class="smile" d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><ellipse class="mouth" cx="161" cy="127" rx="6" ry="5" fill="#1A1300" transform="rotate(-18 161 127)"></ellipse><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
   headline: 'Every song has a home.',
+  // The character can read the explanation aloud: where its speech bubble sits in the scene.
+  voice: { cx: 80, cy: 68, tail: 'M112 84 L142 106 L98 92 Z' },
   explain: [
     'Home is the one chord where the music feels at rest. Some songs never leave it.',
     'Listen for that "we\'re home" feeling, because everything else in harmony is about leaving home and coming back.'
@@ -525,7 +574,7 @@ var STEPS = [
   { icon: '🎹', label: 'Play' },
   { icon: '📌', label: 'Recap' }
 ];
-var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {} };
+var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, voice: 'idle' };
 var view = document.getElementById('view');
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -632,7 +681,10 @@ function chapterHtml() {
 
   if (state.step === 0) {
     if (ch.headline) { h += '<p class="idea">' + esc(ch.headline) + '</p>'; }
-    if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
+    if (ch.scene && ch.voice && Voice.supported) {
+      h += '<button type="button" class="scene talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this explanation aloud') + '">' +
+        ch.scene.replace('</svg>', bubbleSvg(ch.voice) + '</svg>') + '</button>';
+    } else if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
     ch.explain.forEach(function (p) { h += '<p>' + esc(p) + '</p>'; });
     // Listening comes first and is never rushed: the demo stays the bright button. "Next" is only
     // outlined in yellow, a few seconds after the first demo has finished playing.
@@ -728,6 +780,19 @@ function refreshListen(ch) {
   var nx = document.getElementById('next'); if (nx) { nx.classList.toggle('primary', look.next); }
 }
 
+/* The speech bubble drawn into a scene: play triangle, moving bars while speaking, replay arrow when done. */
+function bubbleSvg(v) {
+  var x = v.cx, y = v.cy, bars = '';
+  [[-18, 14], [-8, 28], [2, 18], [12, 24]].forEach(function (b, i) {
+    bars += '<rect class="bar b' + i + '" x="' + (x + b[0]) + '" y="' + (y - b[1] / 2) + '" width="6" height="' + b[1] + '" rx="3" fill="#0F1724"></rect>';
+  });
+  return '<g class="bubble"><ellipse cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="#F4F1EA"></ellipse><path d="' + v.tail + '" fill="#F4F1EA"></path>' +
+    '<path class="i-play" d="M' + (x - 8) + ' ' + (y - 13) + ' L' + (x - 8) + ' ' + (y + 13) + ' L' + (x + 14) + ' ' + y + ' Z" fill="#0F1724"></path>' +
+    '<g class="i-bars">' + bars + '</g>' +
+    '<g class="i-replay"><path d="M' + (x + 12) + ' ' + y + ' A12 12 0 1 1 ' + (x + 6) + ' ' + (y - 10.4) + '" fill="none" stroke="#0F1724" stroke-width="3.5" stroke-linecap="round"></path>' +
+    '<path d="M' + (x + 3) + ' ' + (y - 17) + ' L' + (x + 12) + ' ' + (y - 10) + ' L' + (x + 2) + ' ' + (y - 5) + ' Z" fill="#0F1724"></path></g></g>';
+}
+
 /* Choose step: first "Listening..." while the question plays, then the answers light up as the next action. */
 var listenTimer = null;
 function syncListening() {
@@ -757,19 +822,25 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
 view.addEventListener('click', function (e) {
   var key = e.target.closest('[data-note]');
-  if (key) { Sound.note(Number(key.getAttribute('data-note'))); return; }
+  if (key) { hushVoice(); Sound.note(Number(key.getAttribute('data-note'))); return; }
   var el = e.target.closest('[data-act]');
   if (!el) { return; }
   var act = el.getAttribute('data-act');
   var ch = CONTENT.chapters[state.chapter];
 
-  if (act === 'how') { go('welcome'); render(); }
+  if (act === 'speak') {
+    if (state.voice === 'speaking') { hushVoice(); return; }
+    stopAll();
+    setVoice('speaking');
+    Voice.speak([ch.headline].concat(ch.explain).join(' '), function () { if (state.voice === 'speaking') { setVoice('done'); } });
+  }
+  else if (act === 'how') { go('welcome'); render(); }
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
   else if (act === 'open') { startChapter(el.getAttribute('data-id')); }
   else if (act === 'again') { startChapter(state.chapter); }

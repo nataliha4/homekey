@@ -135,6 +135,16 @@ button.stop:hover .dot { background: var(--ok-bg); }
 .scene { background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 6px; }
 .scene svg { display: block; width: 100%; height: auto; max-height: 150px; }
 
+/* The talking character: a speech bubble inside the scene */
+button.scene.talk { display: block; width: 100%; cursor: pointer; font: inherit; color: inherit; }
+.talk .i-bars, .talk .i-replay, .talk .mouth { display: none; }
+.talk[data-voice="speaking"] .i-play, .talk[data-voice="done"] .i-play { display: none; }
+.talk[data-voice="speaking"] .i-bars, .talk[data-voice="done"] .i-replay { display: inline; }
+.talk[data-voice="speaking"] .smile { display: none; }
+.talk[data-voice="speaking"] .mouth { display: inline; }
+.talk .bubble, .talk .bar, .talk .mouth { transform-box: fill-box; transform-origin: center; }
+.talk:hover .bubble ellipse, .talk:hover .bubble > path:first-of-type { fill: #FFFFFF; }
+
 /* Keyboard */
 .kb-caption { min-height: 18px; font-size: 13px; font-weight: 700; color: var(--muted); }
 .kb { position: relative; display: flex; height: 150px; border-radius: 0 0 10px 10px; overflow: hidden; }
@@ -147,6 +157,15 @@ button.stop:hover .dot { background: var(--ok-bg); }
 
 @media (prefers-reduced-motion: no-preference) {
   .node.current { animation: pulse 2.4s ease-in-out infinite; }
+  .talk[data-voice="idle"] .bubble { animation: bob 1.8s ease-in-out infinite; }
+  .talk[data-voice="speaking"] .bar { animation: bars 0.7s ease-in-out infinite; }
+  .talk[data-voice="speaking"] .bar.b1 { animation-delay: -0.35s; }
+  .talk[data-voice="speaking"] .bar.b2 { animation-delay: -0.15s; }
+  .talk[data-voice="speaking"] .bar.b3 { animation-delay: -0.5s; }
+  .talk[data-voice="speaking"] .mouth { animation: chat 0.36s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes bars { 0%, 100% { transform: scaleY(0.45); } 50% { transform: scaleY(1); } }
+  @keyframes chat { 0%, 100% { transform: rotate(-18deg) scaleY(0.35); } 50% { transform: rotate(-18deg) scaleY(1); } }
   @keyframes pulse { 0%, 100% { box-shadow: 0 0 0 7px rgba(245, 184, 65, 0.22); } 50% { box-shadow: 0 0 0 11px rgba(245, 184, 65, 0.10); } }
 }
 </style>
