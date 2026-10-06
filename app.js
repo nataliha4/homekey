@@ -283,6 +283,8 @@ CONTENT.chapters['1a'] = {
     start: function () { playBeats(repeat(C_MAJOR, 8), 0.75, 'groove'); },
     ready: function () { light(C_MAJOR.notes, 'C major: C, E, G'); }
   },
+  // The character congratulates and reads the recap points aloud.
+  recapGuide: { intro: 'Well done! Here\'s what to remember.', voice: { audio: 'voice-1a-recap.mp3' } },
   recap: [
     'A song can stay on one chord. That chord is home.',
     'Home is where the music feels at rest.',
@@ -776,7 +778,9 @@ function chapterHtml() {
       '<div class="grow"></div><button type="button" class="btn' + (grooved ? ' primary' : '') + '" id="next" data-act="played">I played it</button>';
   } else {
     h += '<div style="display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="font-size: 24px">📌</span><h2>Recap</h2></div>' +
-      '<div style="font-weight: 700; color: var(--ok)">Chapter ' + state.chapter + ' done.' + (state.cur ? ' You got ' + state.score + ' of ' + ch.rounds + ' by ear.' : '') + '</div><ul class="recap-list">';
+      '<div style="font-weight: 700; color: var(--ok)">Chapter ' + state.chapter + ' done.' + (state.cur ? ' You got ' + state.score + ' of ' + ch.rounds + ' by ear.' : '') + '</div>' +
+      (hasGuide(ch.recapGuide) ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read the recap aloud') + '">' + guideSvg() + '<span>' + esc(ch.recapGuide.intro) + '</span></button>' : '') +
+      '<ul class="recap-list">';
     ch.recap.forEach(function (r) { h += '<li>' + esc(r) + '</li>'; });
     h += '</ul><div class="grow"></div><button type="button" class="btn primary" id="next" data-act="back">Back to your path</button>' +
       '<button type="button" class="btn" id="again" data-act="again">Do it again</button>';
@@ -915,8 +919,8 @@ view.addEventListener('click', function (e) {
     setVoice('loading');
     var begin = function () { if (state.voice === 'loading') { setVoice('speaking'); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
-    var clipUrl = state.step === 3 ? ch.play.voice.audio : state.step === 2 ? ch.choose.voice.audio : state.step === 1 ? ch.listenVoice.audio : ch.voice.audio;
-    var words = state.step === 3 ? ch.play.intro : state.step === 2 ? ch.choose.intro : state.step === 1 ? ch.listenIntro : [ch.headline].concat(ch.explain).join(' ');
+    var clipUrl = state.step === 4 ? ch.recapGuide.voice.audio : state.step === 3 ? ch.play.voice.audio : state.step === 2 ? ch.choose.voice.audio : state.step === 1 ? ch.listenVoice.audio : ch.voice.audio;
+    var words = state.step === 4 ? [ch.recapGuide.intro].concat(ch.recap).join(' ') : state.step === 3 ? ch.play.intro : state.step === 2 ? ch.choose.intro : state.step === 1 ? ch.listenIntro : [ch.headline].concat(ch.explain).join(' ');
     var finish = function () { if (state.voice === 'speaking' || state.voice === 'loading') { setVoice('done'); } };
     if (clipUrl) { Voice.play(clipUrl, words, begin, finish); } else { Voice.speak(words, begin, finish); }
   }
