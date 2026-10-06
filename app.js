@@ -525,7 +525,7 @@ var STEPS = [
   { icon: '🎹', label: 'Play' },
   { icon: '📌', label: 'Recap' }
 ];
-var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false };
+var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {} };
 var view = document.getElementById('view');
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -641,11 +641,11 @@ function chapterHtml() {
     ch.songs.forEach(function (s, i) {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
         (s.note ? '<div class="small muted">' + esc(s.note) + '</div>' : '') +
-        '<div class="row"><button type="button" class="btn" id="song-' + i + '" data-act="song" data-i="' + i + '">Play the groove</button>' +
-        '<a href="' + s.url + '" target="_blank" rel="noopener">Open in Spotify</a></div></div>';
+        '<button type="button" class="btn ' + listenLook(ch).songs[i] + '" id="song-' + i + '" data-act="song" data-i="' + i + '"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.songsPlayed[i] ? 'Play again' : 'Play the groove') + '</span></button>' +
+        '<a class="spotify" href="' + s.url + '" target="_blank" rel="noopener">Hear the real song on Spotify <span aria-hidden="true">\u2197</span></a></div>';
     });
     h += '<p class="small muted">For now, a simple groove stands in for each song here. The Spotify link opens the real recording in a new tab.</p>' +
-      '<div class="grow"></div><button type="button" class="btn primary" id="next" data-act="next">Next: your turn to choose</button>';
+      '<div class="grow"></div><button type="button" class="btn' + (listenLook(ch).next ? ' primary' : '') + '" id="next" data-act="next">Next: your turn to choose</button>';
   } else if (state.step === 2) {
     var answered = state.picked !== null;
     var cur = state.cur;
@@ -699,6 +699,30 @@ function welcomeHtml() {
   return h;
 }
 
+/* Listen step: the filled yellow button is always the one thing to do next. It moves from the first
+   unplayed song to the next one, and lands on "Next" once every groove has been played. */
+function listenLook(ch) {
+  var seen = state.maxStep > 1;
+  var first = -1;
+  ch.songs.forEach(function (s, i) { if (first < 0 && !state.songsPlayed[i]) { first = i; } });
+  return {
+    songs: ch.songs.map(function (s, i) { return !seen && i === first ? 'primary' : 'ready'; }),
+    next: seen || first < 0
+  };
+}
+function refreshListen(ch) {
+  if (state.view !== 'chapter' || state.step !== 1) { return; }
+  var look = listenLook(ch);
+  ch.songs.forEach(function (s, i) {
+    var b = document.getElementById('song-' + i);
+    if (!b) { return; }
+    b.classList.toggle('primary', look.songs[i] === 'primary');
+    b.classList.toggle('ready', look.songs[i] === 'ready');
+    var l = b.querySelector('.lbl'); if (l) { l.textContent = state.songsPlayed[i] ? 'Play again' : 'Play the groove'; }
+  });
+  var nx = document.getElementById('next'); if (nx) { nx.classList.toggle('primary', look.next); }
+}
+
 function render(focusId) {
   view.innerHTML = state.view === 'welcome' ? welcomeHtml() : state.view === 'path' ? pathHtml() : chapterHtml();
   if (focusId) { var el = document.getElementById(focusId); if (el) { el.focus({ preventScroll: true }); } }
@@ -712,7 +736,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.demoCount = 0; state.swapped = false; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -760,7 +784,13 @@ view.addEventListener('click', function (e) {
       }, (lastPlayLen + 1) * 1000);
     }
   }
-  else if (act === 'song') { var s = ch.songs[Number(el.getAttribute('data-i'))]; playBeats(s.beats, s.beatDur, s.style || 'groove'); }
+  else if (act === 'song') {
+    var si = Number(el.getAttribute('data-i'));
+    var s = ch.songs[si];
+    playBeats(s.beats, s.beatDur, s.style || 'groove');
+    // Counts as played only if the groove runs to its end; stopAll() cancels this along with the sound.
+    timers.push(setTimeout(function () { state.songsPlayed[si] = true; refreshListen(ch); }, (lastPlayLen + 1) * 1000));
+  }
   else if (act === 'next') {
     stopAll();
     state.step += 1; state.maxStep = Math.max(state.maxStep, state.step); state.lit = []; state.caption = '';

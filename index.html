@@ -56,7 +56,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 30px; 
 /* Buttons */
 .btn { min-height: 52px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--bg); color: var(--fg); font-size: 16px; font-weight: 700; padding: 10px 16px; cursor: pointer; }
 .btn.ready { border-color: var(--accent); color: var(--accent); }
-#next, #demo { transition: border-color 1s ease, color 1s ease, background-color 1s ease; }
+#next, #demo, .song .btn { transition: border-color 1s ease, color 1s ease, background-color 1s ease; }
 .btn.primary { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
 .btn.quiet { min-height: 44px; border-color: transparent; background: transparent; color: var(--muted); font-size: 14px; padding: 8px 10px; }
 .btn:hover { filter: brightness(1.08); }
@@ -104,8 +104,10 @@ button.chip:hover { background: var(--ok-bg); }
 .song .head { display: flex; align-items: center; gap: 12px; }
 .song .icon { font-size: 24px; }
 .song .name { font-weight: 700; }
-.song .row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
-.song .btn { min-height: 44px; font-size: 15px; background: var(--surface); }
+.song .btn { min-height: 48px; font-size: 15px; }
+.song .btn.ready { background: var(--surface); }
+.song .spotify { align-self: center; padding: 4px 8px; font-size: 13px; color: var(--muted); text-underline-offset: 3px; }
+.song .spotify:hover { color: var(--soft); }
 .choices { display: flex; gap: 10px; }
 .choice { flex: 1; height: 92px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .choice b { font-family: var(--display); font-size: 22px; }
