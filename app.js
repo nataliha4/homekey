@@ -163,7 +163,7 @@ function stopAll() {
   hushVoice();
 }
 var lastPlayLen = 0;   // seconds of sound started by the latest playBeats call
-var swapTimer = null;  // trades the looks of the demo and "Next" buttons after three plays
+var swapTimer = null;  // trades the looks of the demo and "Next" buttons after two plays
 var nextTimer = null;  // highlights "Next" on the Explain step
 var NEXT_PAUSE = 4;    // seconds of quiet after the first demo before "Next" is highlighted
 function playBeats(beats, beatDur, style) {
@@ -730,7 +730,7 @@ function chapterHtml() {
     // Listening comes first and is never rushed: the demo stays the bright button. "Next" is only
     // outlined in yellow, a few seconds after the first demo has finished playing.
     var ready = state.nextReady || state.maxStep > 0;
-    // After three plays the two buttons trade looks, and "Next" becomes the main action.
+    // After two plays the two buttons trade looks, and "Next" becomes the main action.
     h += '<button type="button" class="btn ' + (state.swapped ? 'ready' : 'primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(state.demoPlayed ? 'Hear it again' : ch.demoLabel) + '</button>' +
       '<div class="grow"></div><button type="button" class="btn' + (state.swapped ? ' primary' : ready ? ' ready' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
   } else if (state.step === 1) {
@@ -943,7 +943,7 @@ view.addEventListener('click', function (e) {
       }, (lastPlayLen + NEXT_PAUSE) * 1000);
     }
     state.demoCount += 1;
-    if (state.demoCount === 3 && !state.swapped) {
+    if (state.demoCount === 2 && !state.swapped) {
       var swapFor = state.chapter;
       clearTimeout(swapTimer);
       swapTimer = setTimeout(function () {
