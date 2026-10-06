@@ -608,14 +608,35 @@ function chapterHtml() {
   return h;
 }
 
+/* ---------- Welcome: shown on the first visit, and again after a reset ---------- */
+var WELCOME_KEY = 'homekey.welcomed.v1';
+function hasBeenWelcomed() { try { return localStorage.getItem(WELCOME_KEY) === '1'; } catch (e) { return false; } }
+function setWelcomed(on) { try { if (on) { localStorage.setItem(WELCOME_KEY, '1'); } else { localStorage.removeItem(WELCOME_KEY); } } catch (e) {} }
+function welcomeHtml() {
+  var h = '<div class="stack" style="gap: 14px"><h1>Music has logic, like math. Understand it, and you can play the songs you love by ear.</h1>' +
+    '<p class="lead">Hear a new favorite? Recognize its patterns, with no sheet music in front of you.</p></div>';
+  h += '<div class="card"><h2>How it works</h2><p class="muted" style="margin: 0">Every chapter teaches one small idea, in five short steps. Take them in order:</p><ol class="how">';
+  [['\uD83D\uDCA1', 'Explain', 'Read one short idea.'],
+   ['\uD83C\uDFB5', 'Listen', 'Hear it in songs you know.'],
+   ['\uD83E\uDD14', 'Choose', 'Test your ear with quick questions.'],
+   ['\uD83C\uDFB9', 'Play', 'Try it yourself at the piano.'],
+   ['\uD83D\uDCCC', 'Recap', 'See what to remember.']].forEach(function (s) {
+    h += '<li><span class="ico" aria-hidden="true">' + s[0] + '</span><span><b>' + s[1] + '</b><span class="muted"> · ' + s[2] + '</span></span></li>';
+  });
+  h += '</ol></div>';
+  h += '<div class="stack" style="gap: 10px"><button type="button" class="btn primary" id="start" data-act="start">Start</button>' +
+    '<div class="small muted" style="text-align: center">No account needed. Turn your sound on: your first chord is one minute away.</div></div>';
+  return h;
+}
+
 function render(focusId) {
-  view.innerHTML = state.view === 'path' ? pathHtml() : chapterHtml();
+  view.innerHTML = state.view === 'welcome' ? welcomeHtml() : state.view === 'path' ? pathHtml() : chapterHtml();
   if (focusId) { var el = document.getElementById(focusId); if (el) { el.focus({ preventScroll: true }); } }
 }
 function go(viewName) {
   stopAll();
   state.view = viewName;
-  try { history.replaceState(null, '', viewName === 'chapter' ? '#' + state.chapter : '#path'); } catch (e) {}
+  try { history.replaceState(null, '', viewName === 'chapter' ? '#' + state.chapter : '#' + viewName); } catch (e) {}
   window.scrollTo(0, 0);
 }
 function startChapter(id) {
@@ -633,12 +654,13 @@ view.addEventListener('click', function (e) {
   var act = el.getAttribute('data-act');
   var ch = CONTENT.chapters[state.chapter];
 
-  if (act === 'open') { startChapter(el.getAttribute('data-id')); }
+  if (act === 'start') { setWelcomed(true); go('path'); render(); }
+  else if (act === 'open') { startChapter(el.getAttribute('data-id')); }
   else if (act === 'again') { startChapter(state.chapter); }
   else if (act === 'back') { go('path'); state.askReset = false; render(); }
   else if (act === 'reset-ask') { state.askReset = true; render('reset-no'); }
   else if (act === 'reset-no') { state.askReset = false; render('reset-ask'); }
-  else if (act === 'reset-yes') { Progress.reset(); state.askReset = false; render(); }
+  else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); state.askReset = false; go('welcome'); render(); }
   else if (act === 'demo') { stopAll(); ch.demo(); }
   else if (act === 'song') { var s = ch.songs[Number(el.getAttribute('data-i'))]; playBeats(s.beats, s.beatDur, s.style || 'groove'); }
   else if (act === 'next') {
@@ -684,7 +706,8 @@ view.addEventListener('click', function (e) {
 });
 
 document.getElementById('home').addEventListener('click', function () {
-  go('path'); state.askReset = false; render();
+  setWelcomed(true); go('path'); state.askReset = false; render();
 });
 
+if (!hasBeenWelcomed() && Progress.count() === 0) { state.view = 'welcome'; }
 render();
