@@ -82,6 +82,7 @@ var Voice = (function () {
   var synth = null;
   try { if ('speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined') { synth = window.speechSynthesis; } } catch (e) {}
   var current = null; // keeps the utterance alive while it speaks
+  var clip = null;    // the recorded voice file being played, if any
   var token = 0;
   // Devices ship several voices of very different quality. Prefer the natural-sounding ones by name.
   var NICE = [/natural/i, /premium/i, /enhanced/i, /^Samantha/i, /^Ava/i, /^Allison/i, /Google US English/i, /Aria/i, /Jenny/i];
@@ -115,7 +116,28 @@ var Voice = (function () {
         synth.speak(u);
       } catch (e) { onDone(); }
     },
-    stop: function () { token += 1; current = null; try { if (synth) { synth.cancel(); } } catch (e) {} }
+    // Plays a recorded voice file; if it cannot load or play, falls back to the built-in voice.
+    play: function (url, text, onStart, onDone) {
+      var self = this, mine = ++token, fellBack = false;
+      var fallback = function () {
+        if (fellBack || mine !== token) { return; }
+        fellBack = true; clip = null;
+        if (synth) { self.speak(text, onStart, onDone); } else { onDone(); }
+      };
+      try {
+        clip = new Audio(url);
+        clip.onplaying = function () { if (mine === token) { onStart(); } };
+        clip.onended = function () { if (mine === token) { clip = null; onDone(); } };
+        clip.onerror = fallback;
+        var p = clip.play();
+        if (p && p.catch) { p.catch(fallback); }
+      } catch (e) { fallback(); }
+    },
+    stop: function () {
+      token += 1; current = null;
+      try { if (clip) { clip.onerror = null; clip.pause(); clip = null; } } catch (e) {}
+      try { if (synth) { synth.cancel(); } } catch (e) {}
+    }
   };
 })();
 function setVoice(v) {
@@ -201,7 +223,7 @@ CONTENT.chapters['1a'] = {
   // Placeholder text, to be rewritten by Troy in his own voice.
   headline: 'Every song has a home.',
   // The character can read the explanation aloud: where its speech bubble sits in the scene.
-  voice: { cx: 80, cy: 68, tail: 'M112 84 L142 106 L98 92 Z' },
+  voice: { cx: 80, cy: 68, tail: 'M112 84 L142 106 L98 92 Z', audio: 'voice-1a.mp3' },
   explain: [
     'Home is the one chord where the music feels at rest. Some songs never leave it.',
     'Listen for that "we\'re home" feeling, because everything else in harmony is about leaving home and coming back.'
@@ -690,7 +712,7 @@ function chapterHtml() {
 
   if (state.step === 0) {
     if (ch.headline) { h += '<p class="idea">' + esc(ch.headline) + '</p>'; }
-    if (ch.scene && ch.voice && Voice.supported) {
+    if (ch.scene && ch.voice && (ch.voice.audio || Voice.supported)) {
       h += '<button type="button" class="scene talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this explanation aloud') + '">' +
         ch.scene.replace('</svg>', bubbleSvg(ch.voice) + '</svg>') + '</button>';
     } else if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
@@ -851,8 +873,9 @@ view.addEventListener('click', function (e) {
     setVoice('loading');
     var begin = function () { if (state.voice === 'loading') { setVoice('speaking'); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
-    Voice.speak([ch.headline].concat(ch.explain).join(' '), begin,
-      function () { if (state.voice === 'speaking' || state.voice === 'loading') { setVoice('done'); } });
+    var words = [ch.headline].concat(ch.explain).join(' ');
+    var finish = function () { if (state.voice === 'speaking' || state.voice === 'loading') { setVoice('done'); } };
+    if (ch.voice.audio) { Voice.play(ch.voice.audio, words, begin, finish); } else { Voice.speak(words, begin, finish); }
   }
   else if (act === 'how') { go('welcome'); render(); }
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
