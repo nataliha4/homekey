@@ -271,6 +271,8 @@ CONTENT.chapters['1a'] = {
     }
   },
   play: {
+    intro: 'Now it\'s your turn. Find C major on your piano: C, E, and G. Start the groove, and play the chord along with it, in any rhythm you like.',
+    voice: { audio: 'voice-1a-play.mp3' },
     paras: [
       'Now you. Find <strong>C major</strong> on your piano: C, E and G, as lit on the keyboard below.',
       'Start the groove and play the chord along with it, in any rhythm you like.'
@@ -761,10 +763,14 @@ function chapterHtml() {
         '<div class="grow"></div><button type="button" class="btn primary" id="next" data-act="next-round">' + (state.round >= ch.rounds ? 'Next: play it yourself' : 'Next round') + '</button>';
     }
   } else if (state.step === 3) {
-    ch.play.paras.forEach(function (p) { h += '<p>' + p + '</p>'; });
-    h += '<button type="button" class="btn" id="groove" data-act="groove">Start the groove</button>' +
+    if (hasGuide(ch.play)) {
+      h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.play.intro) + '</span></button>';
+    } else { ch.play.paras.forEach(function (p) { h += '<p>' + p + '</p>'; }); }
+    // The groove is the main action until it has run once; then "I played it" takes over.
+    var grooved = state.groovePlayed || state.maxStep > 3;
+    h += '<button type="button" class="btn ' + (grooved ? 'ready' : 'primary') + '" id="groove" data-act="groove"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.groovePlayed ? 'Play it again' : 'Start the groove') + '</span></button>' +
       '<p class="small muted">No piano nearby? Tap the keys below to try it here.</p>' +
-      '<div class="grow"></div><button type="button" class="btn primary" id="next" data-act="played">I played it</button>';
+      '<div class="grow"></div><button type="button" class="btn' + (grooved ? ' primary' : '') + '" id="next" data-act="played">I played it</button>';
   } else {
     h += '<div style="display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="font-size: 24px">📌</span><h2>Recap</h2></div>' +
       '<div style="font-weight: 700; color: var(--ok)">Chapter ' + state.chapter + ' done.' + (state.cur ? ' You got ' + state.score + ' of ' + ch.rounds + ' by ear.' : '') + '</div><ul class="recap-list">';
@@ -885,7 +891,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : 0; state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -905,8 +911,8 @@ view.addEventListener('click', function (e) {
     setVoice('loading');
     var begin = function () { if (state.voice === 'loading') { setVoice('speaking'); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
-    var clipUrl = state.step === 2 ? ch.choose.voice.audio : state.step === 1 ? ch.listenVoice.audio : ch.voice.audio;
-    var words = state.step === 2 ? ch.choose.intro : state.step === 1 ? ch.listenIntro : [ch.headline].concat(ch.explain).join(' ');
+    var clipUrl = state.step === 3 ? ch.play.voice.audio : state.step === 2 ? ch.choose.voice.audio : state.step === 1 ? ch.listenVoice.audio : ch.voice.audio;
+    var words = state.step === 3 ? ch.play.intro : state.step === 2 ? ch.choose.intro : state.step === 1 ? ch.listenIntro : [ch.headline].concat(ch.explain).join(' ');
     var finish = function () { if (state.voice === 'speaking' || state.voice === 'loading') { setVoice('done'); } };
     if (clipUrl) { Voice.play(clipUrl, words, begin, finish); } else { Voice.speak(words, begin, finish); }
   }
@@ -993,7 +999,19 @@ view.addEventListener('click', function (e) {
       askQuestion(ch);
     }
   }
-  else if (act === 'groove') { ch.play.start(); }
+  else if (act === 'groove') {
+    ch.play.start();
+    var grooveFor = state.chapter;
+    // Counts once the groove has run to its end; stopAll() cancels this along with the sound.
+    timers.push(setTimeout(function () {
+      if (state.chapter !== grooveFor) { return; }
+      state.groovePlayed = true;
+      if (state.view !== 'chapter' || state.step !== 3) { return; }
+      var g = document.getElementById('groove'), nx = document.getElementById('next');
+      if (g) { g.classList.remove('primary'); g.classList.add('ready'); var l = g.querySelector('.lbl'); if (l) { l.textContent = 'Play it again'; } }
+      if (nx) { nx.classList.add('primary'); }
+    }, (lastPlayLen + 1) * 1000));
+  }
   else if (act === 'played') { stopAll(); Progress.complete(state.chapter); state.step = 4; state.maxStep = 4; state.lit = []; state.caption = ''; render(); }
 });
 
