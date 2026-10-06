@@ -538,10 +538,10 @@ function pathHtml() {
   });
   h += '</section>';
 
-  if (done > 0) {
+  {
     h += '<div class="reset-row">' + (state.askReset
       ? '<span class="small muted">Erase your progress on this device?</span><button type="button" class="btn quiet" id="reset-yes" data-act="reset-yes">Yes, erase it</button><button type="button" class="btn quiet" id="reset-no" data-act="reset-no">Keep it</button>'
-      : '<button type="button" class="btn quiet" id="reset-ask" data-act="reset-ask">Reset progress</button>') + '</div>';
+      : '<button type="button" class="btn quiet" id="how" data-act="how">How it works</button><button type="button" class="btn quiet" id="reset-ask" data-act="reset-ask">Reset progress</button>') + '</div>';
   }
   return h;
 }
@@ -654,7 +654,8 @@ view.addEventListener('click', function (e) {
   var act = el.getAttribute('data-act');
   var ch = CONTENT.chapters[state.chapter];
 
-  if (act === 'start') { setWelcomed(true); go('path'); render(); }
+  if (act === 'how') { go('welcome'); render(); }
+  else if (act === 'start') { setWelcomed(true); go('path'); render(); }
   else if (act === 'open') { startChapter(el.getAttribute('data-id')); }
   else if (act === 'again') { startChapter(state.chapter); }
   else if (act === 'back') { go('path'); state.askReset = false; render(); }
