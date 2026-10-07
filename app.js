@@ -326,30 +326,29 @@ CONTENT.chapters['1a'] = {
 
 CONTENT.chapters['1b'] = {
   title: 'Home can be dark',
-  scene: '<svg role="img" aria-label="An eighth note on a couch between two windows: a sunny one and a moonlit one" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="40" y="30" width="44" height="40" rx="3" fill="#1E4A50" stroke="#4A5E7E" stroke-width="3"></rect><circle cx="62" cy="50" r="9" fill="#F5B841"></circle><rect x="236" y="30" width="44" height="40" rx="3" fill="#0B111B" stroke="#4A5E7E" stroke-width="3"></rect><circle cx="258" cy="50" r="9" fill="#F4F1EA"></circle><circle cx="262" cy="47" r="8" fill="#0B111B"></circle><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
+  scene: '<svg role="img" aria-label="An eighth note on a couch between two windows: a sunny one and a moonlit one" viewBox="0 0 320 220" width="100%" style="display: block"><rect x="22" y="4" width="40" height="34" rx="3" fill="#1E4A50" stroke="#4A5E7E" stroke-width="3"></rect><circle cx="42" cy="21" r="8" fill="#F5B841"></circle><rect x="258" y="4" width="40" height="34" rx="3" fill="#0B111B" stroke="#4A5E7E" stroke-width="3"></rect><circle cx="278" cy="21" r="8" fill="#F4F1EA"></circle><circle cx="282" cy="18" r="7" fill="#0B111B"></circle><line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line><rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle><path class="smile" d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><ellipse class="mouth" cx="161" cy="127" rx="5" ry="4" fill="#1A1300" transform="rotate(-18 161 127)"></ellipse><path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
   // Placeholder text, to be rewritten by Troy in his own voice.
   headline: 'Home can be bright or dark.',
+  voice: { cx: 80, cy: 62, tail: 'M108 76 L142 106 L92 80 Z', wide: { x: 10, y: 42, w: 158, h: 40 }, audio: null },
   explain: [
     'A home chord comes in two colors. Major sounds bright. Minor sounds dark.',
-    'Only one note differs between them: the middle one. Watch it move on the keyboard.'
+    'Only one note differs between them: the middle one. Listen to both, and watch that note move on the keyboard.'
   ],
   demoLabel: 'Hear bright, then dark',
   demo: function () { playBeats([{ notes: C_MAJOR.notes, bass: 48, caption: 'C major: C, E, G' }, { notes: C_MINOR.notes, bass: 48, caption: 'C minor: C, E flat, G' }], 1.6, 'block'); },
-  toListen: 'Next: listen to two songs',
-  listenIntro: 'Two songs with a dark home. Each one stays on a single minor chord.',
+  toListen: 'Next: listen to a song',
+  listenIntro: 'Now hear a dark home in a real song. Carol of the Bells keeps circling one minor chord. Play the groove, and listen for the darker color.',
+  listenVoice: { audio: null },
   songs: [
     { title: 'Carol of the Bells', artist: 'Mykola Leontovych', kind: 'Minor home',
       url: 'https://open.spotify.com/search/Carol%20of%20the%20Bells',
-      beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 12), beatDur: 0.75, style: 'waltz' },
-    // To confirm against a recording: widely described as a one-chord song (C minor 7).
-    { title: 'Chain of Fools', artist: 'Aretha Franklin', kind: 'Minor home',
-      note: 'This chord also carries one extra note. Ignore it for now.',
-      url: 'https://open.spotify.com/search/Chain%20of%20Fools%20Aretha%20Franklin',
-      beats: repeat({ notes: [60, 63, 67, 70], bass: 48, caption: 'One chord the whole way: C minor 7' }, 8), beatDur: 0.75 }
+      beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 12), beatDur: 0.75, style: 'waltz' }
   ],
   rounds: 10,
   choose: {
     prompt: 'Listen to the chord. Is it major or minor?',
+    intro: 'Now test your ear. You\'ll hear one chord. Is it major or minor, bright or dark? Tap your answer. There are ten rounds, so take your time.',
+    voice: { audio: null },
     replay: 'Hear the chord again',
     options: [{ q: 'major', label: 'Major', sub: 'bright' }, { q: 'minor', label: 'Minor', sub: 'dark' }],
     make: function (prev) {
@@ -364,6 +363,8 @@ CONTENT.chapters['1b'] = {
     verdict: function (cur, good) { return (good ? 'Correct: ' : 'Not quite: that was ') + cur.name + '.'; }
   },
   play: {
+    intro: 'Now it\'s your turn. Start from C major: C, E, and G. Then lower the middle note to the black key on its left. That\'s C minor. Start the groove, and play C minor along with it.',
+    voice: { audio: null },
     paras: [
       'Now you. Start from C major (C, E, G), then lower the middle note to the black key on its left. That is <strong>C minor</strong>.',
       'Start the groove and play C minor along with it, in any rhythm you like.'
@@ -371,6 +372,7 @@ CONTENT.chapters['1b'] = {
     start: function () { playBeats(repeat(C_MINOR, 8), 0.75, 'groove'); },
     ready: function () { light(C_MINOR.notes, 'C minor: C, E flat, G'); }
   },
+  recapGuide: { intro: 'Well done! Here\'s what to remember.', voice: { audio: null } },
   recap: [
     'Home can be major or minor.',
     'Major sounds bright. Minor sounds dark.',
@@ -786,7 +788,7 @@ function chapterHtml() {
       (hasGuide(ch.choose)
         ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.choose.intro) + '</span></button>'
         : '<p>' + esc(ch.choose.prompt) + '</p>') +
-      (state.asked ? '' : '<button type="button" class="btn ' + (voiceFirst(ch) ? 'ready' : 'primary') + '" id="hear" data-act="hear"><span aria-hidden="true">\uD83D\uDD0A </span>Play the chords</button>') +
+      (state.asked ? '' : '<button type="button" class="btn ' + (voiceFirst(ch) ? 'ready' : 'primary') + '" id="hear" data-act="hear"><span aria-hidden="true">\uD83D\uDD0A </span>' + (state.cur && state.cur.beats ? 'Play the chords' : 'Play the chord') + '</button>') +
       '<div class="small listening' + (state.listening && !answered ? ' on' : '') + '" id="listening" aria-live="polite"><span aria-hidden="true">\uD83D\uDD0A </span>Listening\u2026</div>' +
       '<div id="choices" class="choices' + (ch.choose.options.length > 2 ? ' three' : '') + (!state.listening && !answered && state.asked ? ' go' : '') + '">';
     ch.choose.options.forEach(function (o) {
@@ -944,6 +946,7 @@ function firstQuestion(ch) {
 function askQuestion(ch) {
   clearTimeout(listenTimer);
   state.listening = true;
+  hushVoice();
   ch.choose.play(state.cur);
   syncListening();
   var secs = state.cur.beats ? state.cur.beats.length * 0.8 + 0.4 : 1.8;
