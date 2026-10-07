@@ -696,7 +696,7 @@ var STEPS = [
   { icon: '🎹', label: 'Play' },
   { icon: '📌', label: 'Recap' }
 ];
-var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, songsStarted: {}, heard: {}, started: {}, voice: 'idle', asked: true };
+var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, songsStarted: {}, spotSeen: {}, spotOpen: null, heard: {}, started: {}, voice: 'idle', asked: true };
 var view = document.getElementById('view');
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -822,11 +822,11 @@ function chapterHtml() {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
         (s.note ? '<div class="small muted">' + esc(s.note) + '</div>' : '') +
         '<button type="button" class="btn ' + listenLook(ch).songs[i] + '" id="song-' + i + '" data-act="song" data-i="' + i + '"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.songsPlayed[i] ? 'Play again' : 'Play the groove') + '</span></button>' +
-        (s.spotifyId && Spotify.canEmbed
-          ? '<div class="spot" id="spot-' + i + '"><button type="button" class="spotify" data-act="spot" data-i="' + i + '"><span aria-hidden="true">\u25B8 </span>Hear the real song (Spotify)</button></div>'
+        (hasSpot(s)
+          ? '<div class="spot" id="spot-' + i + '" data-look="' + listenLook(ch).spot[i] + '">' + spotInner(i, listenLook(ch).spot[i]) + '</div>'
           : '<a class="spotify" href="' + s.url + '" target="_blank" rel="noopener">Hear the real song on Spotify <span aria-hidden="true">\u2197</span></a>') + '</div>';
     });
-    h += '<p class="small muted">For now, a simple groove stands in for each song here. The Spotify link opens the real recording in a new tab.</p>' +
+    h += '<p class="small muted">' + (ch.songs.some(hasSpot) ? 'The groove is a simple stand-in for the song. The real recording plays from Spotify, right here.' : 'For now, a simple groove stands in for each song here. The Spotify link opens the real recording in a new tab.') + '</p>' +
       '<div class="grow"></div><button type="button" class="btn' + (listenLook(ch).next ? ' primary' : '') + '" id="next" data-act="next">Next: your turn to choose</button>';
   } else if (state.step === 2) {
     var answered = state.picked !== null;
@@ -848,6 +848,10 @@ function chapterHtml() {
       h += '<div class="feedback ' + (good ? 'good' : 'bad') + '" role="status">' + esc(ch.choose.verdict(cur, good)) + '</div>' +
         '<div class="grow"></div><button type="button" class="btn primary" id="next" data-act="next-round">' + (state.round >= ch.rounds ? 'Next: play it yourself' : 'Next round') + '</button>';
     }
+    // The ten rounds are never a locked door: anyone can move on.
+    if (!(answered && state.round >= ch.rounds)) {
+      h += (answered ? '' : '<div class="grow"></div>') + '<button type="button" class="btn quiet skip" id="skip" data-act="skip-choose">Skip to the next step <span aria-hidden="true">\u2192</span></button>';
+    }
   } else if (state.step === 3) {
     if (hasGuide(ch.play)) {
       h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.play.intro) + '</span></button>';
@@ -859,7 +863,7 @@ function chapterHtml() {
       '<div class="grow"></div><button type="button" class="btn' + (grooved ? ' primary' : '') + '" id="next" data-act="played">I played it</button>';
   } else {
     h += '<div style="display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="font-size: 24px">📌</span><h2>Recap</h2></div>' +
-      '<div style="font-weight: 700; color: var(--ok)">Chapter ' + state.chapter + ' done.' + (state.cur ? ' You got ' + state.score + ' of ' + ch.rounds + ' by ear.' : '') + '</div>' +
+      '<div style="font-weight: 700; color: var(--ok)">Chapter ' + state.chapter + ' done.' + (state.roundsDone ? ' You got ' + state.score + ' of ' + ch.rounds + ' by ear.' : '') + '</div>' +
       (hasGuide(ch.recapGuide) ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read the recap aloud') + '">' + guideSvg() + '<span>' + esc(ch.recapGuide.intro) + '</span></button>' : '') +
       '<ul class="recap-list">';
     ch.recap.forEach(function (r) { h += '<li>' + esc(r) + '</li>'; });
@@ -893,14 +897,29 @@ function welcomeHtml() {
 
 /* Listen step: the filled yellow button is always the one thing to do next. It moves from the first
    unplayed song to the next one, and lands on "Next" once every groove has been played. */
+function hasSpot(s) { return !!(s.spotifyId && Spotify.canEmbed); }
+/* The chain on the Listen step, one song at a time: play the groove, then hear the real recording,
+   then on to the next song, and finally "Next". The filled yellow button is always the current link
+   of that chain; skipping ahead is always allowed. */
 function listenLook(ch) {
   var seen = state.maxStep > 1, gate = voiceFirst(ch, 1);
-  var first = -1;
-  ch.songs.forEach(function (s, i) { if (first < 0 && !state.songsPlayed[i]) { first = i; } });
-  return {
-    songs: ch.songs.map(function (s, i) { return !seen && !gate && i === first ? 'primary' : 'ready'; }),
-    next: seen || first < 0
-  };
+  var songs = ch.songs.map(function () { return 'ready'; });
+  var spot = ch.songs.map(function (s, i) { return !hasSpot(s) ? null : (state.songsPlayed[i] || seen ? 'ready' : 'quiet'); });
+  var target = -1;
+  ch.songs.forEach(function (s, i) {
+    var done = state.songsPlayed[i] && (!hasSpot(s) || state.spotSeen[i]);
+    if (target < 0 && !done) { target = i; }
+  });
+  if (!seen && !gate && target >= 0) {
+    if (!state.songsPlayed[target]) { songs[target] = 'primary'; } else { spot[target] = 'primary'; }
+  }
+  return { songs: songs, spot: spot, next: seen || target < 0 };
+}
+function spotInner(i, look) {
+  if (look === 'quiet') {
+    return '<button type="button" class="spotify" data-act="spot" data-i="' + i + '"><span aria-hidden="true">\u25B8 </span>Hear the real song (Spotify)</button>';
+  }
+  return '<button type="button" class="btn spotbtn' + (look === 'primary' ? ' primary' : '') + '" data-act="spot" data-i="' + i + '"><span aria-hidden="true">\uD83C\uDFA7 </span>Hear the real song</button>';
 }
 function refreshListen(ch) {
   if (state.view !== 'chapter' || state.step !== 1) { return; }
@@ -911,6 +930,15 @@ function refreshListen(ch) {
     b.classList.toggle('primary', look.songs[i] === 'primary');
     b.classList.toggle('ready', look.songs[i] === 'ready');
     var l = b.querySelector('.lbl'); if (l) { l.textContent = state.songsPlayed[i] ? 'Play again' : 'Play the groove'; }
+    // The Spotify spot of this card: a quiet link, a button, or (while open) the player itself.
+    var box = document.getElementById('spot-' + i);
+    if (box && look.spot[i]) {
+      var want = state.spotOpen === i ? 'open' : look.spot[i];
+      if (box.getAttribute('data-look') !== want) {
+        box.setAttribute('data-look', want);
+        if (want !== 'open') { box.innerHTML = spotInner(i, want); }
+      }
+    }
   });
   var nx = document.getElementById('next'); if (nx) { nx.classList.toggle('primary', look.next); }
 }
@@ -1001,7 +1029,7 @@ function askQuestion(ch) {
 }
 
 function render(focusId) {
-  Spotify.forget(); // any open players are removed with the old screen
+  Spotify.forget(); state.spotOpen = null; // any open player is removed with the old screen
   // The voice state belongs to one step: a new step starts with a fresh bubble.
   var voiceKey = state.view + ':' + state.chapter + ':' + state.step;
   if (state.view === 'chapter') { Progress.reach(state.chapter, state.maxStep); }
@@ -1018,7 +1046,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.heard = {}; state.started = {}; state.freshFinish = false; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.roundsDone = false; state.heard = {}; state.started = {}; state.freshFinish = false; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; state.spotSeen = {}; state.spotOpen = null; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -1031,9 +1059,18 @@ view.addEventListener('click', function (e) {
   var ch = CONTENT.chapters[state.chapter];
 
   if (act === 'spot') {
-    var sp = ch.songs[Number(el.getAttribute('data-i'))];
-    var box = document.getElementById('spot-' + el.getAttribute('data-i'));
+    var pi = Number(el.getAttribute('data-i'));
+    var sp = ch.songs[pi];
+    var box = document.getElementById('spot-' + pi);
     stopAll();
+    Spotify.forget();
+    state.heard[1] = true;
+    state.songsStarted[pi] = true; state.songsPlayed[pi] = true; state.spotSeen[pi] = true;
+    Object.keys(state.songsStarted).forEach(function (k) { if (Number(k) !== pi) { state.songsPlayed[k] = true; state.spotSeen[k] = true; } });
+    state.spotOpen = pi; // only one player is open at a time; the others fold back into buttons
+    box.setAttribute('data-look', 'open');
+    refreshListen(ch);
+    var cta = document.getElementById('speak'); if (cta) { cta.setAttribute('data-cta', '0'); }
     Spotify.open(box, sp.spotifyId, function () {
       box.innerHTML = '<a class="spotify" href="' + sp.url + '" target="_blank" rel="noopener">Open the real song on Spotify <span aria-hidden="true">\u2197</span></a>';
     });
@@ -1095,11 +1132,15 @@ view.addEventListener('click', function (e) {
     // A groove counts as played when it ends, or as soon as the user moves on to another one.
     // (It used to count only if it ran to the very end, so an interrupted groove stayed "unplayed" forever.)
     state.heard[1] = true;
-    Object.keys(state.songsStarted).forEach(function (k) { if (Number(k) !== si) { state.songsPlayed[k] = true; } });
+    // Moving on to another song settles the earlier ones, including their Spotify invitation.
+    Object.keys(state.songsStarted).forEach(function (k) { if (Number(k) !== si) { state.songsPlayed[k] = true; state.spotSeen[k] = true; } });
     state.songsStarted[si] = true;
+    state.spotOpen = null; Spotify.forget(); // one sound source at a time: an open Spotify player closes
     playBeats(s.beats, s.beatDur, s.style || 'groove');
     refreshListen(ch);
     var songFor = state.chapter;
+    // After a few seconds of groove, the real recording is offered as the next thing to do.
+    if (hasSpot(s)) { setTimeout(function () { if (state.chapter === songFor && state.songsStarted[si]) { state.songsPlayed[si] = true; refreshListen(ch); } }, 3000); }
     setTimeout(function () { if (state.chapter === songFor && state.songsStarted[si]) { state.songsPlayed[si] = true; refreshListen(ch); } }, (lastPlayLen + 1) * 1000);
   }
   else if (act === 'next') {
@@ -1128,9 +1169,17 @@ view.addEventListener('click', function (e) {
     render('next');
     ch.choose.reveal(state.cur);
   }
+  else if (act === 'skip-choose') {
+    stopAll(); clearTimeout(listenTimer); state.listening = false;
+    state.step = 3; state.maxStep = Math.max(state.maxStep, 3); state.lit = []; state.caption = '';
+    render();
+    ch.play.ready();
+    window.scrollTo(0, 0);
+  }
   else if (act === 'next-round') {
     stopAll();
     if (state.round >= ch.rounds) {
+      state.roundsDone = true;
       state.step = 3; state.maxStep = Math.max(state.maxStep, 3); state.lit = []; state.caption = '';
       render();
       ch.play.ready();
