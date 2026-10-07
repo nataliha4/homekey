@@ -617,7 +617,7 @@ var STEPS = [
   { icon: '🎹', label: 'Play' },
   { icon: '📌', label: 'Recap' }
 ];
-var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, voice: 'idle', asked: true };
+var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, songsStarted: {}, voice: 'idle', asked: true };
 var view = document.getElementById('view');
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -867,6 +867,29 @@ function syncListening() {
   if (l) { l.classList.toggle('on', !!state.listening && state.picked === null); }
   if (c) { c.classList.toggle('go', !state.listening && state.picked === null && state.asked); }
 }
+/* A fair set of rounds: every answer comes up equally often, in shuffled order, never three alike in a row.
+   Pure chance used to produce runs like "stayed home" eight times out of ten. */
+function planRounds(ch) {
+  var opts = ch.choose.options.map(function (o) { return o.q; });
+  var best = null;
+  for (var attempt = 0; attempt < 60; attempt++) {
+    var list = [];
+    for (var i = 0; i < ch.rounds; i++) { list.push(opts[i % opts.length]); }
+    for (var j = list.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)); var t = list[j]; list[j] = list[k]; list[k] = t; }
+    best = list;
+    var run = false;
+    for (var r = 2; r < list.length; r++) { if (list[r] === list[r - 1] && list[r] === list[r - 2]) { run = true; } }
+    if (!run) { break; }
+  }
+  return best;
+}
+function drawQuestion(ch, prev) {
+  if (!prev || !state.plan || state.planFor !== state.chapter) { state.plan = planRounds(ch); state.planFor = state.chapter; }
+  var want = state.plan[(state.round - 1) % state.plan.length];
+  var q = ch.choose.make(prev);
+  for (var i = 0; i < 80 && q.q !== want; i++) { q = ch.choose.make(prev); }
+  return q;
+}
 function hasGuide(part) { return !!(part && part.voice && part.intro && (part.voice.audio || Voice.supported)); }
 // Round 1: with a voice guide the chords wait for the user; without one they play right away.
 function firstQuestion(ch) {
@@ -899,7 +922,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -963,14 +986,19 @@ view.addEventListener('click', function (e) {
   else if (act === 'song') {
     var si = Number(el.getAttribute('data-i'));
     var s = ch.songs[si];
+    // A groove counts as played when it ends, or as soon as the user moves on to another one.
+    // (It used to count only if it ran to the very end, so an interrupted groove stayed "unplayed" forever.)
+    Object.keys(state.songsStarted).forEach(function (k) { if (Number(k) !== si) { state.songsPlayed[k] = true; } });
+    state.songsStarted[si] = true;
     playBeats(s.beats, s.beatDur, s.style || 'groove');
-    // Counts as played only if the groove runs to its end; stopAll() cancels this along with the sound.
-    timers.push(setTimeout(function () { state.songsPlayed[si] = true; refreshListen(ch); }, (lastPlayLen + 1) * 1000));
+    refreshListen(ch);
+    var songFor = state.chapter;
+    setTimeout(function () { if (state.chapter === songFor && state.songsStarted[si]) { state.songsPlayed[si] = true; refreshListen(ch); } }, (lastPlayLen + 1) * 1000);
   }
   else if (act === 'next') {
     stopAll();
     state.step += 1; state.maxStep = Math.max(state.maxStep, state.step); state.lit = []; state.caption = '';
-    if (state.step === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = ch.choose.make(null); firstQuestion(ch); }
+    if (state.step === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = drawQuestion(ch, null); firstQuestion(ch); }
     render();
     if (state.step === 3) { ch.play.ready(); }
   }
@@ -979,7 +1007,7 @@ view.addEventListener('click', function (e) {
     if (n > state.maxStep) { return; }
     stopAll();
     state.step = n; state.lit = []; state.caption = '';
-    if (n === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = ch.choose.make(null); firstQuestion(ch); }
+    if (n === 2 && !state.cur) { state.round = 1; state.score = 0; state.picked = null; state.cur = drawQuestion(ch, null); firstQuestion(ch); }
     render();
     if (n === 3) { ch.play.ready(); }
     window.scrollTo(0, 0);
@@ -1001,7 +1029,7 @@ view.addEventListener('click', function (e) {
       ch.play.ready();
     } else {
       state.round += 1; state.picked = null; state.lit = []; state.caption = '';
-      state.cur = ch.choose.make(state.cur);
+      state.cur = drawQuestion(ch, state.cur);
       state.asked = true;
       render();
       askQuestion(ch);
@@ -1010,15 +1038,15 @@ view.addEventListener('click', function (e) {
   else if (act === 'groove') {
     ch.play.start();
     var grooveFor = state.chapter;
-    // Counts once the groove has run to its end; stopAll() cancels this along with the sound.
-    timers.push(setTimeout(function () {
+    // Counts once the groove's time is up, even if the user interrupted it.
+    setTimeout(function () {
       if (state.chapter !== grooveFor) { return; }
       state.groovePlayed = true;
       if (state.view !== 'chapter' || state.step !== 3) { return; }
       var g = document.getElementById('groove'), nx = document.getElementById('next');
       if (g) { g.classList.remove('primary'); g.classList.add('ready'); var l = g.querySelector('.lbl'); if (l) { l.textContent = 'Play it again'; } }
       if (nx) { nx.classList.add('primary'); }
-    }, (lastPlayLen + 1) * 1000));
+    }, (lastPlayLen + 1) * 1000);
   }
   else if (act === 'played') { stopAll(); Progress.complete(state.chapter); state.step = 4; state.maxStep = 4; state.lit = []; state.caption = ''; render(); }
 });
