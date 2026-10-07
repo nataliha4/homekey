@@ -894,14 +894,15 @@ function bubbleSvg(v) {
 
 /* The small guide: the character's head with its speech bubble, for steps that have no scene picture. */
 function guideSvg() {
-  return '<span class="who"><svg aria-hidden="true" width="90" height="60" viewBox="0 0 150 100">' +
-    '<line x1="128" y1="70" x2="128" y2="10" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line>' +
-    '<path d="M128 10 C130 26 148 30 143 50 C143 38 135 33 128 31 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path>' +
-    '<ellipse cx="108" cy="76" rx="24" ry="19" transform="rotate(-18 108 76)" fill="#F5B841"></ellipse>' +
-    '<circle cx="100" cy="72" r="2.6" fill="#1A1300"></circle><circle cx="113" cy="68" r="2.6" fill="#1A1300"></circle>' +
-    '<path class="smile" d="M101 82 Q109 88 118 79" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path>' +
-    '<ellipse class="mouth" cx="109" cy="82" rx="5" ry="4" fill="#1A1300" transform="rotate(-18 109 82)"></ellipse>' +
-    bubbleSvg({ cx: 42, cy: 34, tail: 'M66 52 L92 66 L56 56 Z' }) + '</svg><span class="tap">Tap to listen</span></span>';
+  // Same look as the Explain picture: a wide "Tap to listen" pill coming from the character.
+  return '<svg aria-hidden="true" width="300" height="72" viewBox="0 0 300 72">' +
+    '<line x1="242" y1="40" x2="242" y2="4" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line>' +
+    '<path d="M242 4 C244 18 260 22 255 40 C255 30 248 25 242 23 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path>' +
+    '<ellipse cx="222" cy="46" rx="24" ry="19" transform="rotate(-18 222 46)" fill="#F5B841"></ellipse>' +
+    '<circle cx="214" cy="42" r="2.6" fill="#1A1300"></circle><circle cx="227" cy="38" r="2.6" fill="#1A1300"></circle>' +
+    '<path class="smile" d="M215 52 Q223 58 232 49" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path>' +
+    '<ellipse class="mouth" cx="223" cy="52" rx="5" ry="4" fill="#1A1300" transform="rotate(-18 223 52)"></ellipse>' +
+    bubbleSvg({ cx: 122, cy: 33, tail: 'M150 40 L200 50 L138 50 Z', wide: { x: 4, y: 6, w: 168, h: 44 } }) + '</svg>';
 }
 
 /* Choose step: first "Listening..." while the question plays, then the answers light up as the next action. */
