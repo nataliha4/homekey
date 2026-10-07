@@ -726,7 +726,7 @@ function chapterHtml() {
     if (ch.headline) { h += '<p class="idea">' + esc(ch.headline) + '</p>'; }
     if (ch.scene && ch.voice && (ch.voice.audio || Voice.supported)) {
       h += '<button type="button" class="scene talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this explanation aloud') + '">' +
-        ch.scene.replace('</svg>', bubbleSvg(ch.voice) + '</svg>') + '</button>';
+        ch.scene.replace('</svg>', bubbleSvg(ch.voice) + '</svg>') + '<span class="tap">Tap to listen</span></button>';
     } else if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
     ch.explain.forEach(function (p) { h += '<p>' + esc(p) + '</p>'; });
     // Listening comes first and is never rushed: the demo stays the bright button. "Next" is only
@@ -840,7 +840,7 @@ function bubbleSvg(v) {
   [[-18, 14], [-8, 28], [2, 18], [12, 24]].forEach(function (b, i) {
     bars += '<rect class="bar b' + i + '" x="' + (x + b[0]) + '" y="' + (y - b[1] / 2) + '" width="6" height="' + b[1] + '" rx="3" fill="#0F1724"></rect>';
   });
-  return '<g class="bubble"><ellipse cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="#F4F1EA"></ellipse><path d="' + v.tail + '" fill="#F4F1EA"></path>' +
+  return '<g class="bubble"><ellipse class="ring" cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="none" stroke="#F4F1EA" stroke-width="3"></ellipse><ellipse cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="#F4F1EA"></ellipse><path d="' + v.tail + '" fill="#F4F1EA"></path>' +
     '<path class="i-play" d="M' + (x - 8) + ' ' + (y - 13) + ' L' + (x - 8) + ' ' + (y + 13) + ' L' + (x + 14) + ' ' + y + ' Z" fill="#0F1724"></path>' +
     '<g class="i-dots"><circle class="d0" cx="' + (x - 12) + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle><circle class="d1" cx="' + x + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle><circle class="d2" cx="' + (x + 12) + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle></g>' +
     '<g class="i-bars">' + bars + '</g>' +
@@ -850,14 +850,14 @@ function bubbleSvg(v) {
 
 /* The small guide: the character's head with its speech bubble, for steps that have no scene picture. */
 function guideSvg() {
-  return '<svg aria-hidden="true" width="90" height="60" viewBox="0 0 150 100">' +
+  return '<span class="who"><svg aria-hidden="true" width="90" height="60" viewBox="0 0 150 100">' +
     '<line x1="128" y1="70" x2="128" y2="10" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line>' +
     '<path d="M128 10 C130 26 148 30 143 50 C143 38 135 33 128 31 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path>' +
     '<ellipse cx="108" cy="76" rx="24" ry="19" transform="rotate(-18 108 76)" fill="#F5B841"></ellipse>' +
     '<circle cx="100" cy="72" r="2.6" fill="#1A1300"></circle><circle cx="113" cy="68" r="2.6" fill="#1A1300"></circle>' +
     '<path class="smile" d="M101 82 Q109 88 118 79" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path>' +
     '<ellipse class="mouth" cx="109" cy="82" rx="5" ry="4" fill="#1A1300" transform="rotate(-18 109 82)"></ellipse>' +
-    bubbleSvg({ cx: 42, cy: 34, tail: 'M66 52 L92 66 L56 56 Z' }) + '</svg>';
+    bubbleSvg({ cx: 42, cy: 34, tail: 'M66 52 L92 66 L56 56 Z' }) + '</svg><span class="tap">Tap to listen</span></span>';
 }
 
 /* Choose step: first "Listening..." while the question plays, then the answers light up as the next action. */
