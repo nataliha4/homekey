@@ -188,11 +188,56 @@ function hushVoice() {
   if (typeof state !== 'undefined' && (state.voice === 'speaking' || state.voice === 'loading')) { setVoice('idle'); }
 }
 
-function stopAll() {
+/* ---------- Spotify: the real recording, played inside the song card ----------
+   Works on the hosted site. Where outside content is blocked (such as a preview pane), songs keep a plain link. */
+var Spotify = (function () {
+  var host = '';
+  try { host = location.hostname || ''; } catch (e) {}
+  var canEmbed = /(^|\.)github\.io$/.test(host) || host === 'localhost' || host === '127.0.0.1' || location.protocol === 'file:';
+  var api = null, waiting = [], loading = false, players = [];
+  function withApi(fn) {
+    if (api) { fn(api); return; }
+    waiting.push(fn);
+    if (loading) { return; }
+    loading = true;
+    window.onSpotifyIframeApiReady = function (IFrameAPI) { api = IFrameAPI; waiting.forEach(function (f) { f(api); }); waiting = []; };
+    var s = document.createElement('script');
+    s.src = 'https://open.spotify.com/embed/iframe-api/v1'; s.async = true;
+    s.onerror = function () { loading = false; waiting.forEach(function (f) { f(null); }); waiting = []; };
+    document.body.appendChild(s);
+  }
+  return {
+    canEmbed: canEmbed,
+    // Puts a compact player into the box. onFail runs if Spotify cannot be loaded.
+    open: function (box, trackId, onFail) {
+      box.innerHTML = '<div class="small muted" style="text-align: center">Loading Spotify\u2026</div>';
+      withApi(function (IFrameAPI) {
+        if (!IFrameAPI) { onFail(); return; }
+        box.innerHTML = '<div></div>';
+        try {
+          IFrameAPI.createController(box.firstChild, { uri: 'spotify:track:' + trackId, width: '100%', height: 80 }, function (ctl) {
+            players.push(ctl);
+            // When the real song starts, our own sounds stop, so the two never overlap.
+            try { ctl.addListener('playback_update', function (e) { if (e && e.data && e.data.isPaused === false) { stopOurs(); } }); } catch (e) {}
+            try { ctl.play(); } catch (e) {}
+          });
+        } catch (e) { onFail(); }
+      });
+    },
+    pause: function () { players.forEach(function (c) { try { c.pause(); } catch (e) {} }); },
+    forget: function () { players = []; }
+  };
+})();
+
+function stopOurs() {
   timers.forEach(function (t) { clearTimeout(t); });
   timers = [];
   Sound.stop();
   hushVoice();
+}
+function stopAll() {
+  stopOurs();
+  Spotify.pause();
 }
 var lastPlayLen = 0;   // seconds of sound started by the latest playBeats call
 var swapTimer = null;  // trades the looks of the demo and "Next" buttons after two plays
@@ -272,11 +317,11 @@ CONTENT.chapters['1a'] = {
   songs: [
     // To confirm with Troy: this recording seems to stay on one plain major chord.
     { title: 'Are You Sleeping? (Fr\u00e8re Jacques)', artist: 'Traditional', kind: 'Major home',
-      url: 'https://open.spotify.com/track/67m0guhBCj1j9MTVSPus15',
+      url: 'https://open.spotify.com/track/67m0guhBCj1j9MTVSPus15', spotifyId: '67m0guhBCj1j9MTVSPus15',
       beats: repeat({ notes: [60, 64, 67], bass: 48, caption: 'One chord the whole way: C major' }, 8), beatDur: 0.75 },
     { title: 'Coconut', artist: 'Harry Nilsson', kind: 'Major home',
       note: 'You may hear one extra, spicy note in this chord. Ignore it for now: we\'ll meet it in chapter 1d.',
-      url: 'https://open.spotify.com/search/Coconut%20Harry%20Nilsson',
+      url: 'https://open.spotify.com/track/4o5GyaeGMgDsrclBsL3au7', spotifyId: '4o5GyaeGMgDsrclBsL3au7',
       beats: repeat({ notes: [60, 64, 67, 70], bass: 48, caption: 'One chord the whole way: C7 (major)' }, 8), beatDur: 0.75 }
   ],
   rounds: 10,
@@ -341,7 +386,7 @@ CONTENT.chapters['1b'] = {
   listenVoice: { audio: 'voice-1b-listen.mp3' },
   songs: [
     { title: 'Carol of the Bells', artist: 'Mykola Leontovych', kind: 'Minor home',
-      url: 'https://open.spotify.com/search/Carol%20of%20the%20Bells',
+      url: 'https://open.spotify.com/track/25AtvmC59O7YhigsrxOme6', spotifyId: '25AtvmC59O7YhigsrxOme6',
       beats: repeat({ notes: [60, 63, 67], bass: 48, caption: 'Circling one chord: C minor' }, 12), beatDur: 0.75, style: 'waltz' }
   ],
   rounds: 10,
@@ -777,7 +822,9 @@ function chapterHtml() {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
         (s.note ? '<div class="small muted">' + esc(s.note) + '</div>' : '') +
         '<button type="button" class="btn ' + listenLook(ch).songs[i] + '" id="song-' + i + '" data-act="song" data-i="' + i + '"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.songsPlayed[i] ? 'Play again' : 'Play the groove') + '</span></button>' +
-        '<a class="spotify" href="' + s.url + '" target="_blank" rel="noopener">Hear the real song on Spotify <span aria-hidden="true">\u2197</span></a></div>';
+        (s.spotifyId && Spotify.canEmbed
+          ? '<div class="spot" id="spot-' + i + '"><button type="button" class="spotify" data-act="spot" data-i="' + i + '"><span aria-hidden="true">\u25B8 </span>Hear the real song (Spotify)</button></div>'
+          : '<a class="spotify" href="' + s.url + '" target="_blank" rel="noopener">Hear the real song on Spotify <span aria-hidden="true">\u2197</span></a>') + '</div>';
     });
     h += '<p class="small muted">For now, a simple groove stands in for each song here. The Spotify link opens the real recording in a new tab.</p>' +
       '<div class="grow"></div><button type="button" class="btn' + (listenLook(ch).next ? ' primary' : '') + '" id="next" data-act="next">Next: your turn to choose</button>';
@@ -954,6 +1001,7 @@ function askQuestion(ch) {
 }
 
 function render(focusId) {
+  Spotify.forget(); // any open players are removed with the old screen
   // The voice state belongs to one step: a new step starts with a fresh bubble.
   var voiceKey = state.view + ':' + state.chapter + ':' + state.step;
   if (state.view === 'chapter') { Progress.reach(state.chapter, state.maxStep); }
@@ -982,6 +1030,15 @@ view.addEventListener('click', function (e) {
   var act = el.getAttribute('data-act');
   var ch = CONTENT.chapters[state.chapter];
 
+  if (act === 'spot') {
+    var sp = ch.songs[Number(el.getAttribute('data-i'))];
+    var box = document.getElementById('spot-' + el.getAttribute('data-i'));
+    stopAll();
+    Spotify.open(box, sp.spotifyId, function () {
+      box.innerHTML = '<a class="spotify" href="' + sp.url + '" target="_blank" rel="noopener">Open the real song on Spotify <span aria-hidden="true">\u2197</span></a>';
+    });
+    return;
+  }
   if (act === 'speak') {
     if (state.voice === 'speaking' || state.voice === 'loading') { hushVoice(); return; }
     stopAll();

@@ -112,6 +112,10 @@ button.stop:hover .dot { background: var(--ok-bg); }
 .song .btn.ready { background: var(--surface); }
 .song .spotify { align-self: center; padding: 4px 8px; font-size: 13px; color: var(--muted); text-underline-offset: 3px; }
 .song .spotify:hover { color: var(--soft); }
+.song .spot { display: flex; flex-direction: column; align-items: stretch; }
+.song .spot > .spotify { align-self: center; }
+.song button.spotify { background: none; border: 0; cursor: pointer; font-family: inherit; text-decoration: underline; }
+.song .spot iframe { display: block; width: 100%; border: 0; border-radius: 12px; }
 .choices { display: flex; gap: 10px; }
 .choice { flex: 1; height: 92px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .choice { transition: border-color 0.6s ease; }
