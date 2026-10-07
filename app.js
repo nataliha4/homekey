@@ -143,25 +143,40 @@ var Voice = (function () {
     }
   };
 })();
-/* Explain step: when the character has something to say, its bubble is the first thing to do (yellow).
-   Once the voice has been heard or stopped, or the user plays the chord anyway, the chord demo takes over. */
-function voiceFirst(ch) {
-  return !!(ch.voice && (ch.voice.audio || Voice.supported)) && !state.voiceHeard && state.maxStep === 0;
+/* On every step where the character has something to say, its bubble is the first thing to do (yellow).
+   Once the voice has been heard or stopped, or the user uses the step's main button anyway, that button takes over. */
+function stepHasVoice(ch, step) {
+  if (step === 0) { return !!(ch.voice && (ch.voice.audio || Voice.supported)); }
+  if (step === 1) { return !!(ch.listenVoice && (ch.listenVoice.audio || Voice.supported)); }
+  if (step === 2) { return hasGuide(ch.choose); }
+  if (step === 3) { return hasGuide(ch.play); }
+  return hasGuide(ch.recapGuide);
 }
-function syncExplainCta() {
-  if (state.view !== 'chapter' || state.step !== 0) { return; }
+function voiceFirst(ch, step) {
+  if (step === undefined) { step = state.step; }
+  if (!stepHasVoice(ch, step) || state.heard[step]) { return false; }
+  return step === 4 ? !!state.freshFinish : state.maxStep <= step;
+}
+function markHeard() { if (state.view === 'chapter' && !state.heard[state.step]) { state.heard[state.step] = true; syncCta(); } }
+function syncCta() {
+  if (state.view !== 'chapter') { return; }
   var ch = CONTENT.chapters[state.chapter], first = voiceFirst(ch);
-  var sp = document.getElementById('speak'), dm = document.getElementById('demo');
+  var sp = document.getElementById('speak');
   if (sp) { sp.setAttribute('data-cta', first ? '1' : '0'); }
-  if (dm && !state.swapped) { dm.classList.toggle('primary', !first); }
+  var flip = function (id, on) { var b = document.getElementById(id); if (b) { b.classList.toggle('primary', on); b.classList.toggle('ready', !on); } };
+  if (state.step === 0) { var dm = document.getElementById('demo'); if (dm && !state.swapped) { dm.classList.toggle('primary', !first); } }
+  else if (state.step === 1) { refreshListen(ch); }
+  else if (state.step === 2) { if (!state.asked) { flip('hear', !first); } }
+  else if (state.step === 3) { if (!(state.groovePlayed || state.maxStep > 3)) { flip('groove', !first); } }
+  else if (state.step === 4) { flip('next', !first); }
 }
 function setVoice(v) {
-  if (state.view === 'chapter' && state.step === 0) {
-    if (v === 'loading') { state.voiceStarted = true; }
-    else if (v === 'done' || (v === 'idle' && state.voiceStarted)) { state.voiceHeard = true; }
+  if (state.view === 'chapter') {
+    if (v === 'loading') { state.started[state.step] = true; }
+    else if (v === 'done' || (v === 'idle' && state.started[state.step])) { state.heard[state.step] = true; }
   }
   state.voice = v;
-  syncExplainCta();
+  syncCta();
   var el = document.getElementById('speak');
   if (el) {
     el.setAttribute('data-voice', v);
@@ -634,7 +649,7 @@ var STEPS = [
   { icon: '🎹', label: 'Play' },
   { icon: '📌', label: 'Recap' }
 ];
-var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, songsStarted: {}, voice: 'idle', asked: true };
+var state = { view: 'path', chapter: '1a', step: 0, maxStep: 0, round: 1, score: 0, cur: null, picked: null, lit: [], caption: '', askReset: false, songsPlayed: {}, songsStarted: {}, heard: {}, started: {}, voice: 'idle', asked: true };
 var view = document.getElementById('view');
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
@@ -754,7 +769,7 @@ function chapterHtml() {
       '<div class="grow"></div><button type="button" class="btn' + (state.swapped ? ' primary' : ready ? ' ready' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
   } else if (state.step === 1) {
     if (ch.listenVoice && (ch.listenVoice.audio || Voice.supported)) {
-      h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.listenIntro) + '</span></button>';
+      h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.listenIntro) + '</span></button>';
     } else { h += '<p>' + esc(ch.listenIntro) + '</p>'; }
     ch.songs.forEach(function (s, i) {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
@@ -769,9 +784,9 @@ function chapterHtml() {
     var cur = state.cur;
     h += '<div class="spread small muted" style="font-weight: 700"><span>Round ' + state.round + ' of ' + ch.rounds + '</span><span>' + state.score + ' correct</span></div>' +
       (hasGuide(ch.choose)
-        ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.choose.intro) + '</span></button>'
+        ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.choose.intro) + '</span></button>'
         : '<p>' + esc(ch.choose.prompt) + '</p>') +
-      (state.asked ? '' : '<button type="button" class="btn primary" id="hear" data-act="hear"><span aria-hidden="true">\uD83D\uDD0A </span>Play the chords</button>') +
+      (state.asked ? '' : '<button type="button" class="btn ' + (voiceFirst(ch) ? 'ready' : 'primary') + '" id="hear" data-act="hear"><span aria-hidden="true">\uD83D\uDD0A </span>Play the chords</button>') +
       '<div class="small listening' + (state.listening && !answered ? ' on' : '') + '" id="listening" aria-live="polite"><span aria-hidden="true">\uD83D\uDD0A </span>Listening\u2026</div>' +
       '<div id="choices" class="choices' + (ch.choose.options.length > 2 ? ' three' : '') + (!state.listening && !answered && state.asked ? ' go' : '') + '">';
     ch.choose.options.forEach(function (o) {
@@ -786,20 +801,20 @@ function chapterHtml() {
     }
   } else if (state.step === 3) {
     if (hasGuide(ch.play)) {
-      h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.play.intro) + '</span></button>';
+      h += '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this instruction aloud') + '">' + guideSvg() + '<span>' + esc(ch.play.intro) + '</span></button>';
     } else { ch.play.paras.forEach(function (p) { h += '<p>' + p + '</p>'; }); }
     // The groove is the main action until it has run once; then "I played it" takes over.
     var grooved = state.groovePlayed || state.maxStep > 3;
-    h += '<button type="button" class="btn ' + (grooved ? 'ready' : 'primary') + '" id="groove" data-act="groove"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.groovePlayed ? 'Play it again' : 'Start the groove') + '</span></button>' +
+    h += '<button type="button" class="btn ' + (grooved || voiceFirst(ch) ? 'ready' : 'primary') + '" id="groove" data-act="groove"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.groovePlayed ? 'Play it again' : 'Start the groove') + '</span></button>' +
       '<p class="small muted">No piano nearby? Tap the keys below to try it here.</p>' +
       '<div class="grow"></div><button type="button" class="btn' + (grooved ? ' primary' : '') + '" id="next" data-act="played">I played it</button>';
   } else {
     h += '<div style="display: flex; align-items: center; gap: 10px"><span aria-hidden="true" style="font-size: 24px">📌</span><h2>Recap</h2></div>' +
       '<div style="font-weight: 700; color: var(--ok)">Chapter ' + state.chapter + ' done.' + (state.cur ? ' You got ' + state.score + ' of ' + ch.rounds + ' by ear.' : '') + '</div>' +
-      (hasGuide(ch.recapGuide) ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read the recap aloud') + '">' + guideSvg() + '<span>' + esc(ch.recapGuide.intro) + '</span></button>' : '') +
+      (hasGuide(ch.recapGuide) ? '<button type="button" class="guide talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read the recap aloud') + '">' + guideSvg() + '<span>' + esc(ch.recapGuide.intro) + '</span></button>' : '') +
       '<ul class="recap-list">';
     ch.recap.forEach(function (r) { h += '<li>' + esc(r) + '</li>'; });
-    h += '</ul><div class="grow"></div><button type="button" class="btn primary" id="next" data-act="back">Back to your path</button>' +
+    h += '</ul><div class="grow"></div><button type="button" class="btn ' + (voiceFirst(ch) ? 'ready' : 'primary') + '" id="next" data-act="back">Back to your path</button>' +
       '<button type="button" class="btn" id="again" data-act="again">Do it again</button>';
   }
   h += '</section>' + keyboardHtml();
@@ -830,11 +845,11 @@ function welcomeHtml() {
 /* Listen step: the filled yellow button is always the one thing to do next. It moves from the first
    unplayed song to the next one, and lands on "Next" once every groove has been played. */
 function listenLook(ch) {
-  var seen = state.maxStep > 1;
+  var seen = state.maxStep > 1, gate = voiceFirst(ch, 1);
   var first = -1;
   ch.songs.forEach(function (s, i) { if (first < 0 && !state.songsPlayed[i]) { first = i; } });
   return {
-    songs: ch.songs.map(function (s, i) { return !seen && i === first ? 'primary' : 'ready'; }),
+    songs: ch.songs.map(function (s, i) { return !seen && !gate && i === first ? 'primary' : 'ready'; }),
     next: seen || first < 0
   };
 }
@@ -951,7 +966,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.voiceHeard = false; state.voiceStarted = false; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.heard = {}; state.started = {}; state.freshFinish = false; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -986,7 +1001,7 @@ view.addEventListener('click', function (e) {
   else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); state.askReset = false; go('welcome'); render(); }
   else if (act === 'demo') {
     stopAll(); lastPlayLen = 2; ch.demo();
-    state.voiceHeard = true; syncExplainCta();
+    markHeard();
     if (!state.demoPlayed) {
       state.demoPlayed = true;
       el.innerHTML = '<span aria-hidden="true">\uD83D\uDD0A </span>Hear it again';
@@ -1018,6 +1033,7 @@ view.addEventListener('click', function (e) {
     var s = ch.songs[si];
     // A groove counts as played when it ends, or as soon as the user moves on to another one.
     // (It used to count only if it ran to the very end, so an interrupted groove stayed "unplayed" forever.)
+    state.heard[1] = true;
     Object.keys(state.songsStarted).forEach(function (k) { if (Number(k) !== si) { state.songsPlayed[k] = true; } });
     state.songsStarted[si] = true;
     playBeats(s.beats, s.beatDur, s.style || 'groove');
@@ -1042,7 +1058,7 @@ view.addEventListener('click', function (e) {
     if (n === 3) { ch.play.ready(); }
     window.scrollTo(0, 0);
   }
-  else if (act === 'hear') { if (state.cur) { if (!state.asked) { state.asked = true; render(); } if (state.picked === null) { askQuestion(ch); } else { ch.choose.play(state.cur); } } }
+  else if (act === 'hear') { if (state.cur) { state.heard[2] = true; if (!state.asked) { state.asked = true; render(); } if (state.picked === null) { askQuestion(ch); } else { ch.choose.play(state.cur); } } }
   else if (act === 'pick') {
     if (state.picked !== null || !state.cur || !state.asked) { return; }
     clearTimeout(listenTimer); state.listening = false;
@@ -1066,6 +1082,7 @@ view.addEventListener('click', function (e) {
     }
   }
   else if (act === 'groove') {
+    markHeard();
     ch.play.start();
     var grooveFor = state.chapter;
     // Counts once the groove's time is up, even if the user interrupted it.
@@ -1078,7 +1095,7 @@ view.addEventListener('click', function (e) {
       if (nx) { nx.classList.add('primary'); }
     }, (lastPlayLen + 1) * 1000);
   }
-  else if (act === 'played') { stopAll(); Progress.complete(state.chapter); state.step = 4; state.maxStep = 4; state.lit = []; state.caption = ''; render(); }
+  else if (act === 'played') { stopAll(); state.freshFinish = !Progress.isDone(state.chapter); Progress.complete(state.chapter); state.step = 4; state.maxStep = 4; state.lit = []; state.caption = ''; render(); }
 });
 
 document.getElementById('home').addEventListener('click', function () {
