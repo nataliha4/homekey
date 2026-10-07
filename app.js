@@ -409,7 +409,7 @@ CONTENT.chapters['1b'] = {
   },
   play: {
     intro: 'Now it\'s your turn. Start from C major: C, E, and G. Then lower the middle note to the black key on its left. That\'s C minor. Start the groove, and play C minor along with it.',
-    voice: { audio: null },
+    voice: { audio: 'voice-1b-play.mp3' },
     paras: [
       'Now you. Start from C major (C, E, G), then lower the middle note to the black key on its left. That is <strong>C minor</strong>.',
       'Start the groove and play C minor along with it, in any rhythm you like.'
