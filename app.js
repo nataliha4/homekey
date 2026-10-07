@@ -143,8 +143,25 @@ var Voice = (function () {
     }
   };
 })();
+/* Explain step: when the character has something to say, its bubble is the first thing to do (yellow).
+   Once the voice has been heard or stopped, or the user plays the chord anyway, the chord demo takes over. */
+function voiceFirst(ch) {
+  return !!(ch.voice && (ch.voice.audio || Voice.supported)) && !state.voiceHeard && state.maxStep === 0;
+}
+function syncExplainCta() {
+  if (state.view !== 'chapter' || state.step !== 0) { return; }
+  var ch = CONTENT.chapters[state.chapter], first = voiceFirst(ch);
+  var sp = document.getElementById('speak'), dm = document.getElementById('demo');
+  if (sp) { sp.setAttribute('data-cta', first ? '1' : '0'); }
+  if (dm && !state.swapped) { dm.classList.toggle('primary', !first); }
+}
 function setVoice(v) {
+  if (state.view === 'chapter' && state.step === 0) {
+    if (v === 'loading') { state.voiceStarted = true; }
+    else if (v === 'done' || (v === 'idle' && state.voiceStarted)) { state.voiceHeard = true; }
+  }
   state.voice = v;
+  syncExplainCta();
   var el = document.getElementById('speak');
   if (el) {
     el.setAttribute('data-voice', v);
@@ -226,7 +243,7 @@ CONTENT.chapters['1a'] = {
   // Placeholder text, to be rewritten by Troy in his own voice.
   headline: 'Every song has a home.',
   // The character can read the explanation aloud: where its speech bubble sits in the scene.
-  voice: { cx: 80, cy: 68, tail: 'M112 84 L142 106 L98 92 Z', audio: 'voice-1a.mp3' },
+  voice: { cx: 80, cy: 62, tail: 'M108 76 L142 106 L92 80 Z', wide: { x: 10, y: 42, w: 158, h: 40 }, audio: 'voice-1a.mp3' },
   explain: [
     'Home is the one chord where the music feels at rest. Some songs never leave it.',
     'Listen for that "we\'re home" feeling, because everything else in harmony is about leaving home and coming back.'
@@ -725,15 +742,15 @@ function chapterHtml() {
   if (state.step === 0) {
     if (ch.headline) { h += '<p class="idea">' + esc(ch.headline) + '</p>'; }
     if (ch.scene && ch.voice && (ch.voice.audio || Voice.supported)) {
-      h += '<button type="button" class="scene talk" id="speak" data-act="speak" data-voice="' + state.voice + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this explanation aloud') + '">' +
-        ch.scene.replace('</svg>', bubbleSvg(ch.voice) + '</svg>') + '<span class="tap">Tap to listen</span></button>';
+      h += '<button type="button" class="scene talk" id="speak" data-act="speak" data-voice="' + state.voice + '" data-cta="' + (voiceFirst(ch) ? '1' : '0') + '" aria-label="' + (state.voice === 'speaking' ? 'Stop reading' : 'Read this explanation aloud') + '">' +
+        ch.scene.replace('</svg>', bubbleSvg(ch.voice) + '</svg>') + '</button>';
     } else if (ch.scene) { h += '<div class="scene">' + ch.scene + '</div>'; }
     ch.explain.forEach(function (p) { h += '<p>' + esc(p) + '</p>'; });
     // Listening comes first and is never rushed: the demo stays the bright button. "Next" is only
     // outlined in yellow, a few seconds after the first demo has finished playing.
     var ready = state.nextReady || state.maxStep > 0;
     // After two plays the two buttons trade looks, and "Next" becomes the main action.
-    h += '<button type="button" class="btn ' + (state.swapped ? 'ready' : 'primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(state.demoPlayed ? 'Hear it again' : ch.demoLabel) + '</button>' +
+    h += '<button type="button" class="btn' + (state.swapped ? ' ready' : voiceFirst(ch) ? '' : ' primary') + '" id="demo" data-act="demo"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(state.demoPlayed ? 'Hear it again' : ch.demoLabel) + '</button>' +
       '<div class="grow"></div><button type="button" class="btn' + (state.swapped ? ' primary' : ready ? ' ready' : '') + '" id="next" data-act="next">' + esc(ch.toListen) + '</button>';
   } else if (state.step === 1) {
     if (ch.listenVoice && (ch.listenVoice.audio || Voice.supported)) {
@@ -840,7 +857,19 @@ function bubbleSvg(v) {
   [[-18, 14], [-8, 28], [2, 18], [12, 24]].forEach(function (b, i) {
     bars += '<rect class="bar b' + i + '" x="' + (x + b[0]) + '" y="' + (y - b[1] / 2) + '" width="6" height="' + b[1] + '" rx="3" fill="#0F1724"></rect>';
   });
-  return '<g class="bubble"><ellipse class="ring" cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="none" stroke="#F4F1EA" stroke-width="3"></ellipse><ellipse cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="#F4F1EA"></ellipse><path d="' + v.tail + '" fill="#F4F1EA"></path>' +
+  // In a scene, the waiting bubble is a wide pill that says "Tap to listen" itself, so the words and the
+  // play icon are one thing to tap. While loading, speaking or done it is the small round bubble.
+  var w = v.wide, wide = '';
+  if (w) {
+    wide = '<g class="b-wide"><rect class="bg" x="' + w.x + '" y="' + w.y + '" width="' + w.w + '" height="' + w.h + '" rx="' + (w.h / 2) + '"></rect>' +
+      '<path d="M' + (w.x + 17) + ' ' + (w.y + w.h / 2 - 10) + ' L' + (w.x + 17) + ' ' + (w.y + w.h / 2 + 10) + ' L' + (w.x + 34) + ' ' + (w.y + w.h / 2) + ' Z" fill="#1A1300"></path>' +
+      '<text x="' + (w.x + 42) + '" y="' + (w.y + w.h / 2 + 6) + '" font-size="16" font-weight="700" fill="#1A1300" textLength="' + (w.w - 56) + '" lengthAdjust="spacingAndGlyphs">Tap to listen</text></g>';
+  }
+  var ring = w
+    ? '<rect class="ring ring-wide" x="' + w.x + '" y="' + w.y + '" width="' + w.w + '" height="' + w.h + '" rx="' + (w.h / 2) + '" fill="none" stroke-width="3"></rect>'
+    : '<ellipse class="ring" cx="' + x + '" cy="' + y + '" rx="36" ry="27" fill="none" stroke-width="3"></ellipse>';
+  return '<g class="bubble' + (w ? ' wide' : '') + '">' + ring + '<path class="bg" d="' + v.tail + '"></path>' + wide +
+    '<ellipse class="bg b-round" cx="' + x + '" cy="' + y + '" rx="36" ry="27"></ellipse>' +
     '<path class="i-play" d="M' + (x - 8) + ' ' + (y - 13) + ' L' + (x - 8) + ' ' + (y + 13) + ' L' + (x + 14) + ' ' + y + ' Z" fill="#0F1724"></path>' +
     '<g class="i-dots"><circle class="d0" cx="' + (x - 12) + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle><circle class="d1" cx="' + x + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle><circle class="d2" cx="' + (x + 12) + '" cy="' + y + '" r="4.5" fill="#0F1724"></circle></g>' +
     '<g class="i-bars">' + bars + '</g>' +
@@ -922,7 +951,7 @@ function go(viewName) {
 function startChapter(id) {
   state.chapter = id;
   go('chapter');
-  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
+  state.step = 0; state.demoPlayed = false; state.nextReady = false; state.voice = 'idle'; state.voiceHeard = false; state.voiceStarted = false; state.groovePlayed = false; state.demoCount = 0; state.swapped = false; state.songsPlayed = {}; state.songsStarted = {}; clearTimeout(nextTimer); clearTimeout(swapTimer); state.maxStep = Progress.isDone(id) ? 4 : Progress.reached(id); state.round = 1; state.score = 0; state.cur = null; state.picked = null; state.lit = []; state.caption = '';
   render();
 }
 
@@ -957,6 +986,7 @@ view.addEventListener('click', function (e) {
   else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); state.askReset = false; go('welcome'); render(); }
   else if (act === 'demo') {
     stopAll(); lastPlayLen = 2; ch.demo();
+    state.voiceHeard = true; syncExplainCta();
     if (!state.demoPlayed) {
       state.demoPlayed = true;
       el.innerHTML = '<span aria-hidden="true">\uD83D\uDD0A </span>Hear it again';

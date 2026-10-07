@@ -153,7 +153,16 @@ button.scene.talk { position: relative; }
 .talk[data-voice="speaking"] .smile { display: none; }
 .talk[data-voice="speaking"] .mouth { display: inline; }
 .talk .bubble, .talk .bar, .talk .mouth, .talk .ring, .talk .i-dots circle { transform-box: fill-box; transform-origin: center; }
-.talk:hover .bubble ellipse, .talk:hover .bubble > path:first-of-type { fill: #FFFFFF; }
+.talk .bg { fill: var(--ivory); transition: fill 0.8s ease; }
+.talk .ring { stroke: var(--ivory); }
+.talk[data-cta="1"] .bg { fill: var(--accent); }
+.talk[data-cta="1"] .ring { stroke: var(--accent); }
+.talk .b-wide { display: none; }
+.talk[data-voice="idle"] .wide .b-wide { display: inline; }
+.talk[data-voice="idle"] .wide .b-round, .talk[data-voice="idle"] .wide .i-play { display: none; }
+.talk .ring-wide { display: none; }
+.talk[data-voice="idle"] .ring-wide { display: inline; opacity: 0; }
+.scene.talk svg { max-height: 172px; }
 
 button.guide { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; cursor: pointer; font: inherit; color: inherit; line-height: 1.45; }
 button.guide svg { flex: none; }
@@ -172,6 +181,8 @@ button.guide svg { flex: none; }
   .talk[data-voice="idle"] .bubble { animation: bob 1.8s ease-in-out infinite; }
   .talk[data-voice="idle"] .ring { animation: ring 1.8s ease-out infinite; }
   @keyframes ring { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+  .talk[data-voice="idle"] .ring-wide { animation: ringwide 1.8s ease-out infinite; }
+  @keyframes ringwide { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(1.14, 1.5); opacity: 0; } }
   .talk[data-voice="speaking"] .bar { animation: bars 0.7s ease-in-out infinite; }
   .talk[data-voice="speaking"] .bar.b1 { animation-delay: -0.35s; }
   .talk[data-voice="speaking"] .bar.b2 { animation-delay: -0.15s; }
