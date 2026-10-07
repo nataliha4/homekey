@@ -417,7 +417,7 @@ CONTENT.chapters['1b'] = {
     start: function () { playBeats(repeat(C_MINOR, 8), 0.75, 'groove'); },
     ready: function () { light(C_MINOR.notes, 'C minor: C, E flat, G'); }
   },
-  recapGuide: { intro: 'Well done! Here\'s what to remember.', voice: { audio: null } },
+  recapGuide: { intro: 'Well done! Here\'s what to remember.', voice: { audio: 'voice-1b-recap.mp3' } },
   recap: [
     'Home can be major or minor.',
     'Major sounds bright. Minor sounds dark.',
