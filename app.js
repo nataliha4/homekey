@@ -393,7 +393,7 @@ CONTENT.chapters['1b'] = {
   choose: {
     prompt: 'Listen to the chord. Is it major or minor?',
     intro: 'Now test your ear. You\'ll hear one chord. Is it major or minor, bright or dark? Tap your answer. There are ten rounds, so take your time.',
-    voice: { audio: null },
+    voice: { audio: 'voice-1b-choose.mp3' },
     replay: 'Hear the chord again',
     options: [{ q: 'major', label: 'Major', sub: 'bright' }, { q: 'minor', label: 'Minor', sub: 'dark' }],
     make: function (prev) {
