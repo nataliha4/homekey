@@ -338,7 +338,7 @@ CONTENT.chapters['1b'] = {
   demo: function () { playBeats([{ notes: C_MAJOR.notes, bass: 48, caption: 'C major: C, E, G' }, { notes: C_MINOR.notes, bass: 48, caption: 'C minor: C, E flat, G' }], 1.6, 'block'); },
   toListen: 'Next: listen to a song',
   listenIntro: 'Now hear a dark home in a real song. Carol of the Bells keeps circling one minor chord. Play the groove, and listen for the darker color.',
-  listenVoice: { audio: null },
+  listenVoice: { audio: 'voice-1b-listen.mp3' },
   songs: [
     { title: 'Carol of the Bells', artist: 'Mykola Leontovych', kind: 'Minor home',
       url: 'https://open.spotify.com/search/Carol%20of%20the%20Bells',
