@@ -120,7 +120,7 @@ button.stop:hover .dot { background: var(--ok-bg); }
 @keyframes appear { from { opacity: 0; } to { opacity: 1; } }
 .song .spot iframe { display: block; width: 100%; border: 0; border-radius: 12px; }
 .choices { display: flex; gap: 10px; }
-.choice { flex: 1; height: 92px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.choice { flex: 1; min-height: 112px; padding: 12px 6px; border-radius: 16px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
 .choice { transition: border-color 0.6s ease; }
 .choices.go .choice { border-color: var(--accent); }
 .listening { min-height: 18px; margin: -6px 0; font-weight: 700; color: var(--accent); opacity: 0; transition: opacity 0.4s ease; }
@@ -129,6 +129,8 @@ button.stop:hover .dot { background: var(--ok-bg); }
 .btn.hear { align-self: center; min-height: 40px; text-decoration: underline; text-underline-offset: 3px; }
 .choice b { font-family: var(--display); font-size: 22px; }
 .choice span { font-size: 13px; color: var(--muted); }
+.choice .emo { font-size: 28px; line-height: 1; color: inherit; }
+.choice .emo.white { filter: brightness(0) invert(1); } /* dark emoji (footprints) shown white for contrast */
 .choices.three { gap: 8px; }
 .choices.three .choice b { font-size: 19px; }
 .choice.right { border-color: var(--ok); background: var(--ok-bg); }

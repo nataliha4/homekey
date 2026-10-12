@@ -331,7 +331,7 @@ CONTENT.chapters['1a'] = {
     intro: 'Now test your ear. You\'ll hear four chords. Did the music stay home, or did it leave? Tap your answer. There are ten rounds, so take your time.',
     voice: { audio: 'voice-1a-choose.mp3' },
     replay: 'Hear the chords again',
-    options: [{ q: 'stay', label: 'Stayed home', sub: 'one chord' }, { q: 'leave', label: 'Left home', sub: 'the chord changed' }],
+    options: [{ q: 'stay', icon: '🛋️', label: 'Stayed home', sub: 'one chord' }, { q: 'leave', icon: '👣', iconWhite: true, label: 'Left home', sub: 'the chord changed' }],
     make: function (prev) {
       var roots = [60, 62, 65, 67];
       var root = pick(roots);
@@ -395,7 +395,7 @@ CONTENT.chapters['1b'] = {
     intro: 'Now test your ear. You\'ll hear one chord. Is it major or minor, bright or dark? Tap your answer. There are ten rounds, so take your time.',
     voice: { audio: 'voice-1b-choose.mp3' },
     replay: 'Hear the chord again',
-    options: [{ q: 'major', label: 'Major', sub: 'bright' }, { q: 'minor', label: 'Minor', sub: 'dark' }],
+    options: [{ q: 'major', icon: '😊', label: 'Major', sub: 'bright' }, { q: 'minor', icon: '😢', label: 'Minor', sub: 'dark' }],
     make: function (prev) {
       var roots = [60, 62, 64, 65, 67, 69];
       var root = pick(roots);
@@ -450,7 +450,7 @@ CONTENT.chapters['1c'] = {
   choose: {
     prompt: 'Listen to four chords. Does the music end at home, or at the door?',
     replay: 'Hear the chords again',
-    options: [{ q: 'home', label: 'Home (I)', sub: 'at rest' }, { q: 'door', label: 'The Door (V)', sub: 'unfinished' }],
+    options: [{ q: 'home', icon: '🏠', label: 'Home (I)', sub: 'at rest' }, { q: 'door', icon: '🚪', label: 'The Door (V)', sub: 'unfinished' }],
     make: function (prev) {
       var keys = [{ root: 60, door: 67 }, { root: 65, door: 60 }, { root: 67, door: 62 }, { root: 62, door: 69 }];
       var key = pick(keys);
@@ -514,7 +514,7 @@ CONTENT.chapters['1d'] = {
   choose: {
     prompt: 'Listen to one chord. Is it plain, or does it have the seventh?',
     replay: 'Hear the chord again',
-    options: [{ q: 'plain', label: 'Plain', sub: 'three notes' }, { q: 'seventh', label: 'With the 7th', sub: 'four notes, more pull' }],
+    options: [{ q: 'plain', icon: '🚪', label: 'Plain', sub: 'three notes' }, { q: 'seventh', icon: '🧲', label: 'With the 7th', sub: 'four notes, more pull' }],
     make: function (prev) {
       var roots = [60, 62, 64, 65, 67, 69];
       var root = pick(roots);
@@ -571,7 +571,7 @@ CONTENT.chapters['1e'] = {
   choose: {
     prompt: 'Listen to four chords. Where does the music end: at home, in the garden, or at the door?',
     replay: 'Hear the chords again',
-    options: [{ q: 'home', label: 'Home', sub: 'I' }, { q: 'garden', label: 'Garden', sub: 'IV' }, { q: 'door', label: 'Door', sub: 'V7' }],
+    options: [{ q: 'home', icon: '🏠', label: 'Home', sub: 'I' }, { q: 'garden', icon: '🌳', label: 'Garden', sub: 'IV' }, { q: 'door', icon: '🚪', label: 'Door', sub: 'V7' }],
     make: function (prev) {
       var keys = [
         { root: 60, garden: 65, door: 67, doorNotes: [65, 67, 71, 74] },
@@ -645,7 +645,7 @@ CONTENT.chapters['1f'] = {
   choose: {
     prompt: 'Listen to four chords in a major home. Does the music end at home, or in the bedroom?',
     replay: 'Hear the chords again',
-    options: [{ q: 'home', label: 'Home (I)', sub: 'bright' }, { q: 'bed', label: 'Bedroom (vi)', sub: 'dark and quiet' }],
+    options: [{ q: 'home', icon: '🏠', label: 'Home (I)', sub: 'bright' }, { q: 'bed', icon: '🛏️', label: 'Bedroom (vi)', sub: 'dark and quiet' }],
     make: function (prev) {
       var keys = [
         { root: 60, name: 'C', bed: 'A', garden: 65, gname: 'F', door: 67, dname: 'G', doorNotes: [65, 67, 71, 74] },
@@ -840,7 +840,7 @@ function chapterHtml() {
       '<div id="choices" class="choices' + (ch.choose.options.length > 2 ? ' three' : '') + (!state.listening && !answered && state.asked ? ' go' : '') + '">';
     ch.choose.options.forEach(function (o) {
       var cls = !answered ? '' : (cur.q === o.q ? ' right' : (state.picked === o.q ? ' wrong' : ''));
-      h += '<button type="button" class="choice' + cls + '" id="pick-' + o.q + '" data-act="pick" data-q="' + o.q + '"><b>' + esc(o.label) + '</b><span>' + esc(o.sub) + '</span></button>';
+      h += '<button type="button" class="choice' + cls + '" id="pick-' + o.q + '" data-act="pick" data-q="' + o.q + '">' + (o.icon ? '<span class="emo' + (o.iconWhite ? ' white' : '') + '" aria-hidden="true">' + o.icon + '</span>' : '') + '<b>' + esc(o.label) + '</b><span>' + esc(o.sub) + '</span></button>';
     });
     h += '</div>' + (!state.asked ? '' : '<button type="button" class="btn quiet hear" id="hear" data-act="hear"><span aria-hidden="true">\uD83D\uDD0A </span>' + esc(ch.choose.replay) + '</button>');
     if (answered) {
