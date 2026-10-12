@@ -244,15 +244,22 @@ function grooveIcon(id) { return grooveOn === id ? STOP_ICON : PLAY_ICON; }
 function grooveText(id, idle) { return grooveOn === id ? 'Stop' : idle; }
 function startGroove(id) {
   grooveOn = id;
-  timers.push(setTimeout(function () { if (grooveOn === id) { grooveOn = null; syncGrooveButtons(); } }, lastPlayLen * 1000 + 300));
+  timers.push(setTimeout(function () {
+    if (grooveOn !== id) { return; }
+    grooveOn = null;
+    if (id.indexOf('song-') === 0) { state.songsPlayed[Number(id.slice(5))] = true; }
+    if (id === 'groove') { grooveDone(); }
+    syncGrooveButtons();
+  }, lastPlayLen * 1000 + 300));
   syncGrooveButtons();
 }
 function syncGrooveButtons() {
   if (state.view !== 'chapter') { return; }
   var ch = CONTENT.chapters[state.chapter];
-  if (state.step === 1 && ch && ch.songs) {
-    ch.songs.forEach(function (s, i) { setGrooveLabel('song-' + i, state.songsPlayed[i] ? 'Play again' : 'Play the groove'); });
-  } else if (state.step === 3) {
+  if (state.step === 1 && ch && ch.songs) { refreshListen(ch); }
+  else if (state.step === 3) {
+    var g = document.getElementById('groove');
+    if (g && !grooveOn && !state.groovePlayed && !voiceFirst(ch)) { g.classList.add('primary'); g.classList.remove('ready'); }
     setGrooveLabel('groove', state.groovePlayed ? 'Play it again' : 'Start the groove');
   }
 }
@@ -262,6 +269,7 @@ function setGrooveLabel(id, idle) {
   if (ic) { ic.textContent = grooveIcon(id); }
   if (l) { l.textContent = grooveText(id, idle); }
   b.setAttribute('aria-label', grooveOn === id ? 'Stop the groove' : idle);
+  if (grooveOn === id) { b.classList.remove('primary'); b.classList.add('ready'); }
 }
 function stopAll() {
   stopOurs();
@@ -947,6 +955,7 @@ function listenLook(ch) {
     var done = state.songsPlayed[i] && (!hasSpot(s) || state.spotSeen[i]);
     if (target < 0 && !done) { target = i; }
   });
+  if (grooveOn && grooveOn.indexOf('song-') === 0) { gate = true; }  // listening: nothing is filled
   if (!seen && !gate && target >= 0) {
     if (!state.songsPlayed[target]) { songs[target] = 'primary'; } else { spot[target] = 'primary'; }
   }
@@ -1182,8 +1191,7 @@ view.addEventListener('click', function (e) {
     startGroove('song-' + si);
     refreshListen(ch);
     var songFor = state.chapter;
-    // After a few seconds of groove, the real recording is offered as the next thing to do.
-    if (hasSpot(s)) { setTimeout(function () { if (state.chapter === songFor && state.songsStarted[si]) { state.songsPlayed[si] = true; refreshListen(ch); } }, 3000); }
+    // The real recording becomes the next thing to do only once the groove ends or is stopped.
     setTimeout(function () { if (state.chapter === songFor && state.songsStarted[si]) { state.songsPlayed[si] = true; refreshListen(ch); } }, (lastPlayLen + 1) * 1000);
   }
   else if (act === 'next') {
