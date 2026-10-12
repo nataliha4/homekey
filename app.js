@@ -241,7 +241,7 @@ function stopAll() {
 }
 var lastPlayLen = 0;   // seconds of sound started by the latest playBeats call
 var swapTimer = null;  // trades the looks of the demo and "Next" buttons after two plays
-var nextTimer = null;  // highlights "Next" on the Explain step
+var nextTimer = null;  // highlights "Next" on the Idea step
 var NEXT_PAUSE = 4;    // seconds of quiet after the first demo before "Next" is highlighted
 function playBeats(beats, beatDur, style) {
   stopAll();
@@ -312,7 +312,7 @@ CONTENT.chapters['1a'] = {
   demo: function () { light(C_MAJOR.notes, 'C major: C, E, G'); Sound.chord(C_MAJOR.notes, 2); },
   toListen: 'Next: listen to two songs',
   listenIntro: 'Now hear it in real songs. These two stay on one chord, from start to finish. Play each groove, and listen for the feeling of staying home.',
-  // The character reads the Listen instruction aloud, from a small strip at the top of the step.
+  // The character reads the Songs instruction aloud, from a small strip at the top of the step.
   listenVoice: { audio: 'voice-1a-listen.mp3' },
   songs: [
     // To confirm with Troy: this recording seems to stay on one plain major chord.
@@ -690,9 +690,9 @@ CONTENT.chapters['1f'] = {
 
 /* ---------- App ---------- */
 var STEPS = [
-  { icon: '💡', label: 'Explain' },
-  { icon: '🎵', label: 'Listen' },
-  { icon: '🤔', label: 'Choose' },
+  { icon: '💡', label: 'Idea' },
+  { icon: '🎵', label: 'Songs' },
+  { icon: '👂', label: 'Ear training' },
   { icon: '🎹', label: 'Play' },
   { icon: '📌', label: 'Recap' }
 ];
@@ -827,7 +827,7 @@ function chapterHtml() {
           : '<a class="spotify" href="' + s.url + '" target="_blank" rel="noopener">Hear the real song on Spotify <span aria-hidden="true">\u2197</span></a>') + '</div>';
     });
     h += '<p class="small muted">' + (ch.songs.some(hasSpot) ? 'The groove is a simple stand-in for the song. The real recording plays from Spotify, right here.' : 'For now, a simple groove stands in for each song here. The Spotify link opens the real recording in a new tab.') + '</p>' +
-      '<div class="grow"></div><button type="button" class="btn' + (listenLook(ch).next ? ' primary' : '') + '" id="next" data-act="next">Next: your turn to choose</button>';
+      '<div class="grow"></div><button type="button" class="btn' + (listenLook(ch).next ? ' primary' : '') + '" id="next" data-act="next">Next: ear training</button>';
   } else if (state.step === 2) {
     var answered = state.picked !== null;
     var cur = state.cur;
@@ -882,9 +882,9 @@ function welcomeHtml() {
   var h = '<div class="stack" style="gap: 14px"><h1>Music has logic, like math. Understand it, and you can play the songs you love by ear.</h1>' +
     '<p class="lead">Hear a new favorite? Recognize its patterns, with no sheet music in front of you.</p></div>';
   h += '<div class="card welcome-card"><svg class="greeter" aria-hidden="true" viewBox="0 0 84 130"><line x1="56" y1="86" x2="56" y2="14" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M56 14 C58 32 80 36 74 60 C74 46 64 40 56 38 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><path d="M16 88 L5 72" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path><ellipse cx="34" cy="94" rx="27" ry="21" transform="rotate(-18 34 94)" fill="#F5B841"></ellipse><circle cx="25" cy="90" r="2.8" fill="#1A1300"></circle><circle cx="40" cy="86" r="2.8" fill="#1A1300"></circle><path d="M26 100 Q35 107 45 97" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><path d="M24 112 L22 126" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path><path d="M42 111 L42 126" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path></svg><h2>How it works</h2><p class="muted" style="margin: 0">Every chapter teaches one small idea, in five short steps. Take them in order:</p><ol class="how">';
-  [['\uD83D\uDCA1', 'Explain', 'Read one short idea.'],
-   ['\uD83C\uDFB5', 'Listen', 'Hear it in songs you know.'],
-   ['\uD83E\uDD14', 'Choose', 'Test your ear with quick questions.'],
+  [['\uD83D\uDCA1', 'Idea', 'Hear one short idea.'],
+   ['\uD83C\uDFB5', 'Songs', 'Hear it in songs you know.'],
+   ['\uD83D\uDC42', 'Ear training', 'Test your ear with quick questions.'],
    ['\uD83C\uDFB9', 'Play', 'Try it yourself at the piano.'],
    ['\uD83D\uDCCC', 'Recap', 'See what to remember.']].forEach(function (s) {
     h += '<li><span class="ico" aria-hidden="true">' + s[0] + '</span><span><b>' + s[1] + '</b><span class="muted"> · ' + s[2] + '</span></span></li>';
@@ -895,10 +895,10 @@ function welcomeHtml() {
   return h;
 }
 
-/* Listen step: the filled yellow button is always the one thing to do next. It moves from the first
+/* Songs step: the filled yellow button is always the one thing to do next. It moves from the first
    unplayed song to the next one, and lands on "Next" once every groove has been played. */
 function hasSpot(s) { return !!(s.spotifyId && Spotify.canEmbed); }
-/* The chain on the Listen step, one song at a time: play the groove, then hear the real recording,
+/* The chain on the Songs step, one song at a time: play the groove, then hear the real recording,
    then on to the next song, and finally "Next". The filled yellow button is always the current link
    of that chain; skipping ahead is always allowed. */
 function listenLook(ch) {
@@ -971,7 +971,7 @@ function bubbleSvg(v) {
 
 /* The small guide: the character's head with its speech bubble, for steps that have no scene picture. */
 function guideSvg() {
-  // Same look as the Explain picture: a wide "Tap to listen" pill coming from the character.
+  // Same look as the Idea picture: a wide "Tap to listen" pill coming from the character.
   return '<svg aria-hidden="true" width="300" height="72" viewBox="0 0 300 72">' +
     '<line x1="242" y1="40" x2="242" y2="4" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line>' +
     '<path d="M242 4 C244 18 260 22 255 40 C255 30 248 25 242 23 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path>' +
@@ -982,7 +982,7 @@ function guideSvg() {
     bubbleSvg({ cx: 122, cy: 33, tail: 'M150 40 L200 50 L138 50 Z', wide: { x: 4, y: 6, w: 168, h: 44 } }) + '</svg>';
 }
 
-/* Choose step: first "Listening..." while the question plays, then the answers light up as the next action. */
+/* Ear training step: first "Listening..." while the question plays, then the answers light up as the next action. */
 var listenTimer = null;
 function syncListening() {
   var l = document.getElementById('listening'), c = document.getElementById('choices');

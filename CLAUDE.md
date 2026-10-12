@@ -26,13 +26,13 @@ Read the backlog before starting work. When an item is done, move it to the Done
 
 ## Lesson design (as built)
 
-Each chapter has five steps (to be renamed, backlog item 10: Idea, Songs, Ear training, Play, Recap):
+Each chapter has five steps (renamed in backlog item 10; internal code names still use explain, listen, choose):
 
-1. Explain: headline, picture with the eighth-note character, text, chord demo.
-2. Listen: per song, a synthesized groove, then the real recording from Spotify inside the card.
-3. Choose: ten ear-training rounds with a balanced, shuffled mix of answers; skippable.
-4. Play: play along with a groove at the piano (how to make this interactive is open, backlog item 1).
-5. Recap: points to remember.
+1. 💡 Idea: headline, picture with the eighth-note character, text, chord demo.
+2. 🎵 Songs: per song, a synthesized groove, then the real recording from Spotify inside the card.
+3. 👂 Ear training: ten ear-training rounds with a balanced, shuffled mix of answers; skippable.
+4. 🎹 Play: play along with a groove at the piano (how to make this interactive is open, backlog item 1).
+5. 📌 Recap: points to remember.
 
 Interaction rules built so far:
 
