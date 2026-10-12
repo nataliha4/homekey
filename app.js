@@ -234,6 +234,34 @@ function stopOurs() {
   timers = [];
   Sound.stop();
   hushVoice();
+  if (grooveOn) { grooveOn = null; syncGrooveButtons(); }
+}
+/* A playing groove's button turns into "Stop" (backlog #14). grooveOn is the id of that button
+   ('song-0', 'song-1', 'groove'), or null. Any other sound stops the groove and resets the button. */
+var grooveOn = null;
+var STOP_ICON = '\u25A0 ', PLAY_ICON = '\uD83D\uDD0A ';
+function grooveIcon(id) { return grooveOn === id ? STOP_ICON : PLAY_ICON; }
+function grooveText(id, idle) { return grooveOn === id ? 'Stop' : idle; }
+function startGroove(id) {
+  grooveOn = id;
+  timers.push(setTimeout(function () { if (grooveOn === id) { grooveOn = null; syncGrooveButtons(); } }, lastPlayLen * 1000 + 300));
+  syncGrooveButtons();
+}
+function syncGrooveButtons() {
+  if (state.view !== 'chapter') { return; }
+  var ch = CONTENT.chapters[state.chapter];
+  if (state.step === 1 && ch && ch.songs) {
+    ch.songs.forEach(function (s, i) { setGrooveLabel('song-' + i, state.songsPlayed[i] ? 'Play again' : 'Play the groove'); });
+  } else if (state.step === 3) {
+    setGrooveLabel('groove', state.groovePlayed ? 'Play it again' : 'Start the groove');
+  }
+}
+function setGrooveLabel(id, idle) {
+  var b = document.getElementById(id); if (!b) { return; }
+  var ic = b.querySelector('.ico'), l = b.querySelector('.lbl');
+  if (ic) { ic.textContent = grooveIcon(id); }
+  if (l) { l.textContent = grooveText(id, idle); }
+  b.setAttribute('aria-label', grooveOn === id ? 'Stop the groove' : idle);
 }
 function stopAll() {
   stopOurs();
@@ -251,6 +279,15 @@ function playBeats(beats, beatDur, style) {
     if (i > 0 && beats[i - 1].caption === b.caption) { return; }
     timers.push(setTimeout(function () { light(b.notes, b.caption); }, i * beatDur * 1000 + 40));
   });
+}
+// Play step: once the groove has been heard (or stopped), "I played it" becomes the main action.
+function grooveDone() {
+  state.groovePlayed = true;
+  if (state.view !== 'chapter' || state.step !== 3) { return; }
+  var g = document.getElementById('groove'), nx = document.getElementById('next');
+  if (g) { g.classList.remove('primary'); g.classList.add('ready'); }
+  setGrooveLabel('groove', 'Play it again');
+  if (nx) { nx.classList.add('primary'); }
 }
 function repeat(chord, n) { var out = []; for (var i = 0; i < n; i++) { out.push(chord); } return out; }
 function pick(list) { return list[Math.floor(Math.random() * list.length)]; }
@@ -821,7 +858,7 @@ function chapterHtml() {
     ch.songs.forEach(function (s, i) {
       h += '<div class="song"><div class="head"><span class="icon" aria-hidden="true">🎵</span><div><div class="name">"' + esc(s.title) + '"</div><div class="small muted">' + esc(s.artist) + ' · ' + esc(s.kind) + '</div></div></div>' +
         (s.note ? '<div class="small muted">' + esc(s.note) + '</div>' : '') +
-        '<button type="button" class="btn ' + listenLook(ch).songs[i] + '" id="song-' + i + '" data-act="song" data-i="' + i + '"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.songsPlayed[i] ? 'Play again' : 'Play the groove') + '</span></button>' +
+        '<button type="button" class="btn ' + listenLook(ch).songs[i] + '" id="song-' + i + '" data-act="song" data-i="' + i + '"><span class="ico" aria-hidden="true">' + grooveIcon('song-' + i) + '</span><span class="lbl">' + grooveText('song-' + i, state.songsPlayed[i] ? 'Play again' : 'Play the groove') + '</span></button>' +
         (hasSpot(s)
           ? '<div class="spot" id="spot-' + i + '" data-look="' + listenLook(ch).spot[i] + '">' + spotInner(i, listenLook(ch).spot[i]) + '</div>'
           : '<a class="spotify" href="' + s.url + '" target="_blank" rel="noopener">Hear the real song on Spotify <span aria-hidden="true">\u2197</span></a>') + '</div>';
@@ -858,7 +895,7 @@ function chapterHtml() {
     } else { ch.play.paras.forEach(function (p) { h += '<p>' + p + '</p>'; }); }
     // The groove is the main action until it has run once; then "I played it" takes over.
     var grooved = state.groovePlayed || state.maxStep > 3;
-    h += '<button type="button" class="btn ' + (grooved || voiceFirst(ch) ? 'ready' : 'primary') + '" id="groove" data-act="groove"><span aria-hidden="true">\uD83D\uDD0A </span><span class="lbl">' + (state.groovePlayed ? 'Play it again' : 'Start the groove') + '</span></button>' +
+    h += '<button type="button" class="btn ' + (grooved || voiceFirst(ch) ? 'ready' : 'primary') + '" id="groove" data-act="groove"><span class="ico" aria-hidden="true">' + grooveIcon('groove') + '</span><span class="lbl">' + grooveText('groove', state.groovePlayed ? 'Play it again' : 'Start the groove') + '</span></button>' +
       '<p class="small muted">No piano nearby? Tap the keys below to try it here.</p>' +
       '<div class="grow"></div><button type="button" class="btn' + (grooved ? ' primary' : '') + '" id="next" data-act="played">I played it</button>';
   } else {
@@ -929,7 +966,7 @@ function refreshListen(ch) {
     if (!b) { return; }
     b.classList.toggle('primary', look.songs[i] === 'primary');
     b.classList.toggle('ready', look.songs[i] === 'ready');
-    var l = b.querySelector('.lbl'); if (l) { l.textContent = state.songsPlayed[i] ? 'Play again' : 'Play the groove'; }
+    setGrooveLabel('song-' + i, state.songsPlayed[i] ? 'Play again' : 'Play the groove');
     // The Spotify spot of this card: a quiet link, a button, or (while open) the player itself.
     var box = document.getElementById('spot-' + i);
     if (box && look.spot[i]) {
@@ -1129,6 +1166,11 @@ view.addEventListener('click', function (e) {
   else if (act === 'song') {
     var si = Number(el.getAttribute('data-i'));
     var s = ch.songs[si];
+    if (grooveOn === 'song-' + si) {
+      // Stop: silence it, clear the keyboard, and count the groove as heard.
+      stopAll(); state.songsPlayed[si] = true; light([], ''); refreshListen(ch);
+      return;
+    }
     // A groove counts as played when it ends, or as soon as the user moves on to another one.
     // (It used to count only if it ran to the very end, so an interrupted groove stayed "unplayed" forever.)
     state.heard[1] = true;
@@ -1137,6 +1179,7 @@ view.addEventListener('click', function (e) {
     state.songsStarted[si] = true;
     state.spotOpen = null; Spotify.forget(); // one sound source at a time: an open Spotify player closes
     playBeats(s.beats, s.beatDur, s.style || 'groove');
+    startGroove('song-' + si);
     refreshListen(ch);
     var songFor = state.chapter;
     // After a few seconds of groove, the real recording is offered as the next thing to do.
@@ -1192,18 +1235,17 @@ view.addEventListener('click', function (e) {
     }
   }
   else if (act === 'groove') {
+    if (grooveOn === 'groove') {
+      // Stop: silence it, show the chord to play again, and count the groove as heard.
+      stopAll(); ch.play.ready(); grooveDone();
+      return;
+    }
     markHeard();
     ch.play.start();
+    startGroove('groove');
     var grooveFor = state.chapter;
     // Counts once the groove's time is up, even if the user interrupted it.
-    setTimeout(function () {
-      if (state.chapter !== grooveFor) { return; }
-      state.groovePlayed = true;
-      if (state.view !== 'chapter' || state.step !== 3) { return; }
-      var g = document.getElementById('groove'), nx = document.getElementById('next');
-      if (g) { g.classList.remove('primary'); g.classList.add('ready'); var l = g.querySelector('.lbl'); if (l) { l.textContent = 'Play it again'; } }
-      if (nx) { nx.classList.add('primary'); }
-    }, (lastPlayLen + 1) * 1000);
+    setTimeout(function () { if (state.chapter === grooveFor) { grooveDone(); } }, (lastPlayLen + 1) * 1000);
   }
   else if (act === 'played') { stopAll(); state.freshFinish = !Progress.isDone(state.chapter); Progress.complete(state.chapter); state.step = 4; state.maxStep = 4; state.lit = []; state.caption = ''; render(); }
 });
