@@ -16,6 +16,7 @@ Read the backlog before starting work. When an item is done, move it to the Done
 - She tests on her Android phone and her Mac; testers also use iPhones. Remind her to hard-refresh (Cmd + Shift + R) after a deploy if something looks old.
 - Commit messages: a subject of at most 50 characters (GitHub's limit in her workflow), plus a short bullet description.
 - Recordings are stand-ins and will all be re-recorded. Change texts freely; just list which recordings no longer match.
+- Anything we decide to park for later goes into the backlog right away, with what was decided.
 
 ## Code
 
@@ -23,6 +24,12 @@ Read the backlog before starting work. When an item is done, move it to the Done
 - `app.js`: everything else, in this order: Sound (Web Audio synth), Progress (localStorage `homekey.progress.v2`: finished chapters and the furthest step reached per chapter), Voice (recorded mp3 with the browser's speech voice as fallback), Spotify (embedded player via the Spotify iFrame API, only on the hosted site; plain links elsewhere), chord constants, `CONTENT` (sections and chapters), then rendering and the click handler.
 - `voice-<chapter>[-step].mp3`: recorded voice for the character, per chapter and step (1a and 1b are complete).
 - No build step, no dependencies. Check syntax with `node --check app.js`.
+
+## New lesson design (in progress, backlog #5)
+
+- One screen, one action: the action sits in the content (voice pill, play button, answer cards); a gray Continue at the bottom turns yellow once it's done. Top bar is just ✕ and a progress bar. Mockups: Design canvas "HomeKey lesson screens" (row "B, chosen · 1a in detail").
+- Built as a test copy in `next/` (live at https://nataliha4.github.io/homekey/next/): `next/lesson.js` holds the new lesson module, `next/app.js` and `next/index.html` are copies of the main files with small hooks. Only chapter 1a uses it (`NEW_LESSON` in `next/lesson.js`); nothing beyond 1a changes until Natalie approves 1a. When approved, the copy replaces the main files.
+- Recordings stay in the main folder; the test copy reads them with `../`. `voice-1a-play.mp3` no longer matches the new Play text, so the Play screen has no voice for now.
 
 ## Lesson design (as built)
 
