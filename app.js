@@ -7,12 +7,12 @@ var Sound = (function () {
     if (ctx.state === 'suspended') { ctx.resume(); }
     return ctx;
   }
-  function tone(midi, when, dur, vol) {
+  function tone(midi, when, dur, vol, attack) {
     var c = ac();
     var f = 440 * Math.pow(2, (midi - 69) / 12);
     var g = c.createGain();
     g.gain.setValueAtTime(0.0001, when);
-    g.gain.exponentialRampToValueAtTime(vol, when + 0.015);
+    g.gain.exponentialRampToValueAtTime(vol, when + (attack || 0.015));
     g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
     var o1 = c.createOscillator(); o1.type = 'triangle'; o1.frequency.value = f;
     var o2 = c.createOscillator(); o2.type = 'sine'; o2.frequency.value = f * 2;
@@ -29,7 +29,8 @@ var Sound = (function () {
   }
   return {
     stop: stop,
-    note: function (midi) { try { tone(midi, ac().currentTime + 0.01, 1.2, 0.25); } catch (e) {} },
+    // Keys you tap sound at once, with a quick attack, so playing along with a groove feels in time.
+    note: function (midi) { try { tone(midi, ac().currentTime, 1.2, 0.25, 0.004); } catch (e) {} },
     chord: function (notes, dur) {
       try { stop(); var t = ac().currentTime + 0.03; notes.forEach(function (n, i) { tone(n, t + i * 0.012, dur || 1.6, 0.22); }); } catch (e) {}
     },
@@ -1096,9 +1097,17 @@ function startChapter(id) {
   render();
 }
 
+/* Piano keys sound the moment a finger or mouse touches them (pointerdown), not on release (click),
+   which would add the time the finger rests on the glass. Click still plays for keyboard users (Enter/Space). */
+function playKey(key) { hushVoice(); Sound.note(Number(key.getAttribute('data-note'))); }
+view.addEventListener('pointerdown', function (e) {
+  if (e.button > 0) { return; }
+  var key = e.target.closest('[data-note]');
+  if (key) { playKey(key); }
+});
 view.addEventListener('click', function (e) {
   var key = e.target.closest('[data-note]');
-  if (key) { hushVoice(); Sound.note(Number(key.getAttribute('data-note'))); return; }
+  if (key) { if (e.detail === 0) { playKey(key); } return; }
   var el = e.target.closest('[data-act]');
   if (!el) { return; }
   var act = el.getAttribute('data-act');
