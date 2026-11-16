@@ -302,6 +302,41 @@ h1.lh { font-size: 28px; }
   .lbars rect:nth-child(3) { animation-delay: 0.3s; }
   .lbars rect:nth-child(4) { animation-delay: 0.45s; }
 }
+
+/* Idea screen: the talking note in the middle of the screen is the button */
+.lstage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; min-height: 260px; }
+.lnote { display: block; width: 100%; max-width: 360px; border: 0; background: transparent; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.lnote svg { display: block; width: 100%; height: auto; overflow: visible; }
+.lnote .nbub { fill: var(--accent); }
+.lnote .ndots circle, .lnote .nbars rect { fill: var(--accent-ink); }
+.lnote .nagain { stroke: var(--accent); }
+.lnote .nbars, .lnote .nagain, .lnote .nmouth { display: none; }
+.lnote[data-state="idle"] .nsmile, .lnote[data-state="loading"] .nsmile, .lnote[data-state="speaking"] .nsmile { display: none; }
+.lnote[data-state="idle"] .nmouth, .lnote[data-state="loading"] .nmouth, .lnote[data-state="speaking"] .nmouth { display: inline; }
+.lnote[data-state="speaking"] .ndots, .lnote[data-state="heard"] .ndots { display: none; }
+.lnote[data-state="speaking"] .nbars { display: inline; }
+.lnote[data-state="speaking"] .nbub, .lnote[data-state="heard"] .nbub { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; }
+.lnote[data-state="speaking"] .nbars rect { fill: var(--accent); }
+.lnote[data-state="heard"] .nagain { display: inline; }
+.lnote .nmouth { transform: rotate(-18deg) scaleY(0.3); }
+.lnote .nbody, .lnote .nmouth, .lnote .nbars rect { transform-box: fill-box; transform-origin: center; }
+.llinkslot { min-height: 44px; display: flex; justify-content: center; }
+.lhint { min-height: 20px; font-size: 14px; font-weight: 700; color: var(--muted); }
+.lsubs { min-height: 9.5em; display: flex; flex-direction: column; gap: 8px; }
+.lsubs p { margin: 0; font-size: 17px; line-height: 1.5; color: var(--soft); animation: appear 0.6s ease; }
+@media (prefers-reduced-motion: no-preference) {
+  .lnote[data-state="idle"] .nbody { animation: bob 2.2s ease-in-out infinite; }
+  .lnote[data-state="idle"] .nmouth { animation: mutter 2.6s ease-in-out infinite; }
+  .lnote[data-state="idle"] .ndots circle, .lnote[data-state="loading"] .ndots circle { animation: dots 1.4s ease-in-out infinite; }
+  .lnote .ndots circle:nth-child(2) { animation-delay: 0.2s; }
+  .lnote .ndots circle:nth-child(3) { animation-delay: 0.4s; }
+  .lnote[data-state="speaking"] .nmouth { animation: chat 0.32s ease-in-out infinite; }
+  .lnote[data-state="speaking"] .nbars rect { animation: bars 0.9s ease-in-out infinite; }
+  .lnote .nbars rect:nth-child(2) { animation-delay: 0.15s; }
+  .lnote .nbars rect:nth-child(3) { animation-delay: 0.3s; }
+  .lnote .nbars rect:nth-child(4) { animation-delay: 0.45s; }
+  @keyframes mutter { 0%, 46%, 100% { transform: rotate(-18deg) scaleY(0.25); } 54% { transform: rotate(-18deg) scaleY(1); } 62% { transform: rotate(-18deg) scaleY(0.35); } 70% { transform: rotate(-18deg) scaleY(0.9); } 78% { transform: rotate(-18deg) scaleY(0.25); } }
+}
 </style>
 </head>
 <body>
