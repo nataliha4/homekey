@@ -29,6 +29,7 @@ Read the backlog before starting work. When an item is done, move it to the Done
 
 - One screen, one action: the action sits in the content (voice pill, play button, answer cards); a gray Continue at the bottom turns yellow once it's done. Top bar is just ✕ and a progress bar. Mockups: Design canvas "HomeKey lesson screens" (row "B, chosen · 1a in detail").
 - Built as a test copy in `next/` (live at https://nataliha4.github.io/homekey/next/): `next/lesson.js` holds the new lesson module, `next/app.js` and `next/index.html` are copies of the main files with small hooks. Only chapter 1a uses it (`NEW_LESSON` in `next/lesson.js`); nothing beyond 1a changes until Natalie approves 1a. When approved, the copy replaces the main files.
+- The test copy is called "HomeKey v2" and installs as its own app (backlog #2): `next/manifest.webmanifest` and `next/icons/` (icon E from the design canvas: yellow roof over the H and K tiles, on navy). The main app has no manifest yet.
 - Recordings stay in the main folder; the test copy reads them with `../`. `voice-1a-play.mp3` no longer matches the new Play text, so the Play screen has no voice for now.
 
 ## Lesson design (as built)

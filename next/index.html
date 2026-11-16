@@ -3,7 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HomeKey (test)</title>
+<title>HomeKey v2</title>
+<!-- Installable app (backlog #2): own name, icon and full-screen window when added to the home screen -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0F1724">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HomeKey v2">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@600;700&display=swap">
 <style>
 /* Layout: one phone-width column, centered; the path scrolls, a chapter is a card above a piano keyboard. Single dark look by choice. */
@@ -300,7 +310,7 @@ h1.lh { font-size: 28px; }
     <span class="clef" aria-hidden="true">🎼</span>
     <span class="tile on">H</span><span class="tile">o</span><span class="tile on">m</span><span class="tile">e</span><span class="tile on">K</span><span class="tile">e</span><span class="tile">y</span>
   </button>
-  <div class="testtag">Test version: new lesson design</div>
+  <div class="testtag">HomeKey v2 · test version</div>
   <main id="view" class="stack" style="gap: 20px"></main>
 </div>
 <script src="app.js"></script>
