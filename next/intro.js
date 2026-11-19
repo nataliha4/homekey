@@ -14,7 +14,10 @@ var Intro = (function () {
       after: { voice: 'voice-intro-2-sound-ok.mp3', words: 'Lovely! Your sound works.' } },
     { id: 'how', title: 'One small idea per chapter', voice: 'voice-intro-3-how.mp3',
       words: 'Every chapter teaches one small idea, in five short steps. I explain it, you hear it in real songs, you train your ear, then you play it yourself. And we wrap up together.',
-      shown: 'Every chapter teaches one small idea, in five short steps.' },
+      shown: 'Every chapter teaches one small idea, in five short steps.',
+      // When each step's phrase starts in voice-intro-3-how.mp3, in seconds ("I explain it", "you hear it in real songs", ...).
+      // Measured from the pauses in this recording: measure again if the line is re-recorded.
+      cues: [4.6, 5.75, 7.7, 8.95, 10.75], cuesEnd: 12.4 },
     { id: 'piano', title: 'Do you have a piano nearby?', voice: 'voice-intro-4-piano.mp3',
       words: 'Do you have a piano or keyboard nearby?',
       after: { voice: 'voice-intro-4-piano-ok.mp3', words: 'No problem either way. You can always play on the keys in the app.' } },
@@ -23,12 +26,26 @@ var Intro = (function () {
   ];
   var STEPS = [['💡', 'Idea', 'I explain one small idea.'], ['🎵', 'Songs', 'You hear it in real songs.'],
     ['👂', 'Ear training', 'You train your ear.'], ['🎹', 'Play', 'You play it yourself.'], ['📌', 'Recap', 'We wrap up together.']];
-  var s = null, timers = [];
+  var s = null, timers = [], ticker = null;
 
   function isDone() { try { return localStorage.getItem(DONE_KEY) === '1'; } catch (e) { return false; } }
   function setDone(on) { try { if (on) { localStorage.setItem(DONE_KEY, '1'); } else { localStorage.removeItem(DONE_KEY); localStorage.removeItem(PIANO_KEY); } } catch (e) {} }
   function cur() { return SCREENS[s.i]; }
-  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; clearInterval(ticker); ticker = null; if (s) { s.lit = -1; } }
+  /* Screen 3: the step box Cady is talking about lights up, following the clip's own clock (so a slow start
+     or a pause doesn't throw it off). Only with the recording; the built-in voice fallback lights nothing. */
+  function followCues() {
+    var sc = cur();
+    ticker = setInterval(function () {
+      if (!s || cur() !== sc) { clearInterval(ticker); return; }
+      var t = s.voice === 'speaking' ? Voice.clipTime() : -1, k = -1;
+      if (t >= 0 && t < sc.cuesEnd) { sc.cues.forEach(function (c, j) { if (t >= c) { k = j; } }); }
+      if (k !== s.lit) {
+        s.lit = k;
+        document.querySelectorAll('.istep').forEach(function (el, j) { el.classList.toggle('on', j === k); });
+      }
+    }, 100);
+  }
 
   /* ---------- Cady's voice: 'idle' | 'loading' | 'speaking'; heard once it ends or is stopped ---------- */
   function say(line, key) {
@@ -39,6 +56,7 @@ var Intro = (function () {
     var finish = function () { if (s && s.i === i && s.voice !== 'idle') { ended(); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
     Voice.play(line.voice, line.words, begin, finish);
+    if (line.cues) { followCues(); }
   }
   function ended() { s.voice = 'idle'; s.heard[s.saying] = true; s.saying = null; refresh(); }
   function tapCady() {
@@ -54,7 +72,7 @@ var Intro = (function () {
 
   /* ---------- Moving through the screens ---------- */
   function start() {
-    s = { i: 0, voice: 'idle', saying: null, heard: {}, read: false, answered: {}, piano: null };
+    s = { lit: -1, i: 0, voice: 'idle', saying: null, heard: {}, read: false, answered: {}, piano: null };
     state.lit = []; state.caption = '';
     go('intro');
     render();
@@ -128,8 +146,8 @@ var Intro = (function () {
     }
     if (sc.id === 'how') {
       h += smallCady(esc(sc.shown));
-      h += '<div class="isteps">' + STEPS.map(function (x) {
-        return '<div class="istep"><span class="ico" aria-hidden="true">' + x[0] + '</span><div><b>' + x[1] + '</b><span>' + x[2] + '</span></div></div>';
+      h += '<div class="isteps">' + STEPS.map(function (x, j) {
+        return '<div class="istep' + (j === s.lit ? ' on' : '') + '"><span class="ico" aria-hidden="true">' + x[0] + '</span><div><b>' + x[1] + '</b><span>' + x[2] + '</span></div></div>';
       }).join('') + '</div><div class="grow"></div>';
       return h + bottomHtml('Continue', canContinue());
     }

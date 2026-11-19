@@ -363,6 +363,8 @@ h1.lh { font-size: 28px; }
 .icheck span { padding: 6px 14px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 700; font-size: 15px; animation: appear 0.4s ease; }
 .isteps { display: flex; flex-direction: column; gap: 8px; }
 .istep { display: flex; gap: 14px; align-items: center; padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--line); }
+.istep { transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease; }
+.istep.on { border-color: var(--accent); background: #24324A; transform: scale(1.02); }
 .istep .ico { font-size: 24px; width: 30px; text-align: center; }
 .istep b { display: block; font-size: 16px; }
 .istep span:not(.ico) { font-size: 14px; color: var(--muted); }
@@ -379,8 +381,8 @@ h1.lh { font-size: 28px; }
   <div class="testtag">HomeKey v2 · test version</div>
   <main id="view" class="stack" style="gap: 20px"></main>
 </div>
-<script src="app.js?v=2026-11-19e"></script>
-<script src="lesson.js?v=2026-11-19e"></script>
-<script src="intro.js?v=2026-11-19e"></script>
+<script src="app.js?v=2026-11-19f"></script>
+<script src="lesson.js?v=2026-11-19f"></script>
+<script src="intro.js?v=2026-11-19f"></script>
 </body>
 </html>

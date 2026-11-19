@@ -137,6 +137,8 @@ var Voice = (function () {
         if (p && p.catch) { p.catch(fallback); }
       } catch (e) { fallback(); }
     },
+    // Seconds into the recorded clip now playing, or -1 when none is (e.g. the built-in voice took over).
+    clipTime: function () { try { return clip && !clip.paused ? clip.currentTime : -1; } catch (e) { return -1; } },
     stop: function () {
       token += 1; current = null;
       try { if (clip) { clip.onerror = null; clip.pause(); clip = null; } } catch (e) {}
@@ -774,7 +776,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-19e';
+var APP_VERSION = '2026-11-19f';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
