@@ -773,6 +773,18 @@ function light(notes, caption) {
   });
 }
 
+/* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
+var APP_VERSION = '2026-11-19c';
+/* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
+   then reloads. Needed mostly in the installed app, which has no refresh button. */
+function hardRefresh(btn) {
+  if (btn) { btn.textContent = 'Checking…'; btn.disabled = true; }
+  var files = ['./', 'index.html', 'app.js', 'lesson.js', 'intro.js', 'manifest.webmanifest'];
+  var go = function () { location.replace(location.pathname + '?r=' + Date.now()); };
+  try { Promise.all(files.map(function (f) { return fetch(f, { cache: 'reload' }).catch(function () {}); })).then(go, go); } catch (e) { go(); }
+  setTimeout(go, 5000);
+}
+
 /* Path screen */
 function pathHtml() {
   var s1 = CONTENT.section1;
@@ -828,6 +840,7 @@ function pathHtml() {
     h += '<div class="reset-row">' + (state.askReset
       ? '<span class="small muted">Erase your progress on this device?</span><button type="button" class="btn quiet" id="reset-yes" data-act="reset-yes">Yes, erase it</button><button type="button" class="btn quiet" id="reset-no" data-act="reset-no">Keep it</button>'
       : '<button type="button" class="btn quiet" id="how" data-act="how">How it works</button><button type="button" class="btn quiet" id="reset-ask" data-act="reset-ask">Reset progress</button>') + '</div>';
+    h += '<div class="update-row"><button type="button" class="btn quiet" data-act="refresh">Check for updates</button><span class="small muted">Version ' + APP_VERSION + '</span></div>';
   }
   return h;
 }
@@ -1167,6 +1180,7 @@ view.addEventListener('click', function (e) {
   else if (act === 'how') { go('welcome'); render(); }
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
   else if (act === 'intro') { Intro.start(); }
+  else if (act === 'refresh') { hardRefresh(el); }
   else if (act === 'open') { startChapter(el.getAttribute('data-id')); }
   else if (act === 'again') { startChapter(state.chapter); }
   else if (act === 'back') { go('path'); state.askReset = false; render(); }
