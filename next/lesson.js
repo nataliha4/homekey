@@ -195,9 +195,9 @@ var L = (function () {
   }
   function demoHtml() {
     var h = '<h1 class="lh">Hear a home chord</h1><p class="lp">Tap play and notice how settled it sounds.</p>';
-    h += '<div class="lcenter"><button type="button" class="lround' + (s.demoPlayed ? '' : ' primary') + '" data-act="l-demo" aria-label="' + (s.demoPlayed ? 'Play the home chord again' : 'Play the home chord') + '">' + (s.demoPlayed ? ICON.again : ICON.play) + '</button>' +
+    h += '<div class="lmid"><div class="lcenter"><button type="button" class="lround' + (s.demoPlayed ? '' : ' primary') + '" data-act="l-demo" aria-label="' + (s.demoPlayed ? 'Play the home chord again' : 'Play the home chord') + '">' + (s.demoPlayed ? ICON.again : ICON.play) + '</button>' +
       '<div class="lroundlbl' + (s.demoPlayed ? '' : ' on') + '">' + (s.demoPlayed ? 'Play it again' : 'Play the home chord') + '</div></div>';
-    h += keyboardHtml();
+    h += keyboardHtml() + '</div>'; // play button and keys together, centered in the space above Continue
     return h + bottomHtml('Continue', canContinue('demo'));
   }
   function songCtlHtml(i) {
