@@ -168,5 +168,8 @@ var Intro = (function () {
     else if (act === 'i-finish' && canContinue()) { stopAll(); clearTimers(); setDone(true); s = null; startChapter('1a'); }
   }
 
-  return { start: start, html: html, click: click, onHush: onHush, onKey: onKey, isDone: isDone, setDone: setDone, debug: function () { return s; } };
+  // True while Cady says "Lovely! Your sound works.": more key taps play their notes but don't cut her off.
+  function keepsVoice() { return !!s && state.view === 'intro' && s.saying === 'sound-ok' && s.voice !== 'idle'; }
+
+  return { keepsVoice: keepsVoice, start: start, html: html, click: click, onHush: onHush, onKey: onKey, isDone: isDone, setDone: setDone, debug: function () { return s; } };
 })();

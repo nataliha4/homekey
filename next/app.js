@@ -774,7 +774,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-19d';
+var APP_VERSION = '2026-11-19e';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
@@ -1127,7 +1127,9 @@ function startChapter(id) {
    which would add the time the finger rests on the glass. Click still plays for keyboard users (Enter/Space). */
 function playKey(key) {
   var n = Number(key.getAttribute('data-note'));
-  hushVoice(); Sound.note(n);
+  // Keys hush the voice, except while Cady confirms the sound check: she finishes her sentence.
+  if (!(typeof Intro !== 'undefined' && Intro.keepsVoice())) { hushVoice(); }
+  Sound.note(n);
   if (typeof Intro !== 'undefined') { Intro.onKey(n); }
 }
 view.addEventListener('pointerdown', function (e) {
