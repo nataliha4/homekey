@@ -774,7 +774,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-19c';
+var APP_VERSION = '2026-11-19d';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
@@ -1307,4 +1307,5 @@ document.getElementById('home').addEventListener('click', function () {
 });
 
 if (!hasBeenWelcomed() && Progress.count() === 0) { state.view = 'welcome'; }
-render();
+// First draw once every script has loaded (lesson.js and intro.js come after this file): the path needs Intro.
+document.addEventListener('DOMContentLoaded', function () { render(); });

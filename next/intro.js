@@ -71,7 +71,7 @@ var Intro = (function () {
     var id = cur().id;
     if (id === 'hello') { return !!s.heard.hello || s.read; }
     if (id === 'sound' || id === 'piano') { return !!s.answered[id]; }
-    return true;
+    return !!s.heard[id]; // 'how' and 'ready': once Cady has finished (or been stopped with a tap)
   }
   // A piano key on the sound-check screen: the note plays (app.js), then Cady confirms.
   function onKey(note) {
@@ -131,7 +131,7 @@ var Intro = (function () {
       h += '<div class="isteps">' + STEPS.map(function (x) {
         return '<div class="istep"><span class="ico" aria-hidden="true">' + x[0] + '</span><div><b>' + x[1] + '</b><span>' + x[2] + '</span></div></div>';
       }).join('') + '</div><div class="grow"></div>';
-      return h + bottomHtml('Continue', true);
+      return h + bottomHtml('Continue', canContinue());
     }
     if (sc.id === 'piano') {
       var a = s.piano;
@@ -145,7 +145,7 @@ var Intro = (function () {
     h += '<div class="lstage"><button type="button" class="lnote" data-act="i-speak" data-state="' + cadyState('ready') + '" aria-label="Hear Cady again">' +
       '<svg aria-hidden="true" viewBox="30 10 260 190">' + L.scene + '</svg></button></div>';
     h += '<div class="lsubs"><p>Let’s start with your first chapter: <b class="iaccent">One chord, home</b>.</p></div>';
-    return h + bottomHtml('Start chapter 1a', true, 'i-finish');
+    return h + bottomHtml('Start chapter 1a', canContinue(), 'i-finish');
   }
   function html() { return '<div class="lesson intro">' + topHtml() + body() + '</div>'; }
   function refresh() {
@@ -165,7 +165,7 @@ var Intro = (function () {
       try { localStorage.setItem(PIANO_KEY, s.piano); } catch (e) {}
       if (first) { say(cur().after, 'piano-ok'); } else { refresh(); }
     }
-    else if (act === 'i-finish') { stopAll(); clearTimers(); setDone(true); s = null; startChapter('1a'); }
+    else if (act === 'i-finish' && canContinue()) { stopAll(); clearTimers(); setDone(true); s = null; startChapter('1a'); }
   }
 
   return { start: start, html: html, click: click, onHush: onHush, onKey: onKey, isDone: isDone, setDone: setDone, debug: function () { return s; } };
