@@ -1,6 +1,8 @@
 # HomeKey: notes for Claude
 
-HomeKey is a small web app that teaches music harmony by ear, built by Natalie (product owner, software background) with her piano teacher Troy (content and teaching). It is live at https://nataliha4.github.io/homekey/ (GitHub Pages, deployed from `main`, root folder).
+HomeKey is a small web app that teaches music harmony by ear, built by Natalie (product owner, software background) with her piano teacher Troy (content and teaching). GitHub Pages deploys `main`.
+
+**All work happens in HomeKey v2, in the `next/` folder** (https://nataliha4.github.io/homekey/next/). The main app in the root folder (https://nataliha4.github.io/homekey/, the link testers have) is **v1, frozen since Nov 19, 2026: do not change its files**. Only its recordings are shared: v2 reads them with `../`. When Natalie decides, v2 will replace v1.
 
 ## Key documents (Claude Docs, readable with the Docs tools)
 
@@ -18,21 +20,22 @@ Read the backlog before starting work. When an item is done, move it to the Done
 - Recordings are stand-ins and will all be re-recorded. Change texts freely; just list which recordings no longer match.
 - Anything we decide to park for later goes into the backlog right away, with what was decided.
 
-## Code
+## Code (v1, frozen; v2 is built on the same structure)
 
 - `index.html`: page skeleton and all CSS (single dark theme: background #0F1724, accent yellow #F5B841, teal #6AD1C7; fonts Outfit and DM Sans).
 - `app.js`: everything else, in this order: Sound (Web Audio synth), Progress (localStorage `homekey.progress.v2`: finished chapters and the furthest step reached per chapter), Voice (recorded mp3 with the browser's speech voice as fallback), Spotify (embedded player via the Spotify iFrame API, only on the hosted site; plain links elsewhere), chord constants, `CONTENT` (sections and chapters), then rendering and the click handler.
 - `voice-<chapter>[-step].mp3`: recorded voice for the character, per chapter and step (1a and 1b are complete).
 - No build step, no dependencies. Check syntax with `node --check app.js`.
 
-## New lesson design (in progress, backlog #5)
+## HomeKey v2 (`next/`): where all work happens
 
 - One screen, one action: the action sits in the content (voice pill, play button, answer cards); a gray Continue at the bottom turns yellow once it's done. Top bar is just ✕ and a progress bar. Mockups: Design canvas "HomeKey lesson screens" (row "B, chosen · 1a in detail").
-- Built as a test copy in `next/` (live at https://nataliha4.github.io/homekey/next/): `next/lesson.js` holds the new lesson module, `next/app.js` and `next/index.html` are copies of the main files with small hooks. Only chapter 1a uses it (`NEW_LESSON` in `next/lesson.js`); nothing beyond 1a changes until Natalie approves 1a. When approved, the copy replaces the main files.
+- Files: `next/index.html` (page and all CSS), `next/app.js` (started as a copy of v1's app.js; now v2's own and changed freely), `next/lesson.js` (the new lesson design). Check syntax with `node --check` on both scripts.
+- New lesson design (backlog #5): only chapter 1a uses it (`NEW_LESSON` in `next/lesson.js`); chapters 1b to 1f still open in the old design inside v2, and nothing beyond 1a changes until Natalie approves 1a.
 - The test copy is called "HomeKey v2" and installs as its own app (backlog #2): `next/manifest.webmanifest` and `next/icons/` (icon E from the design canvas: yellow roof over the H and K tiles, on navy). The main app has no manifest yet.
 - Recordings stay in the main folder; the test copy reads them with `../`. Exception: v2-only recordings live in `next/` (`voiceV2` in `next/lesson.js`), starting with `next/voice-1a-idea-v2.mp3`, the ElevenLabs voice for the 1a Idea (backlog #13). Generated audio only needs trimming and loudness matching, not the noise filter below. `voice-1a-play.mp3` no longer matches the new Play text, so the Play screen has no voice for now.
 
-## Lesson design (as built)
+## Old lesson design (v1, and chapters 1b to 1f in v2)
 
 Each chapter has five steps (renamed in backlog item 10; internal code names still use explain, listen, choose):
 
