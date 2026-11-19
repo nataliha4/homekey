@@ -82,6 +82,7 @@ h1 { margin: 0; font-family: var(--display); font-weight: 700; font-size: 30px; 
 button.node { cursor: pointer; }
 .node.current { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-size: 22px; box-shadow: 0 0 0 7px rgba(245, 184, 65, 0.22); }
 .node.done { border-color: var(--ok); color: var(--ok); }
+.node.current.waiting { background: var(--bg); color: var(--accent); box-shadow: none; } /* 1a before the intro: available, not the next thing to do */
 .node-label { position: absolute; display: flex; flex-direction: column; gap: 2px; }
 .node-label .t { font-size: 15px; font-weight: 700; color: var(--soft); }
 .node-label .s { font-size: 13px; color: var(--muted); }
@@ -337,6 +338,35 @@ h1.lh { font-size: 28px; }
   .lnote .nbars rect:nth-child(4) { animation-delay: 0.45s; }
   @keyframes mutter { 0%, 46%, 100% { transform: rotate(-18deg) scaleY(0.25); } 54% { transform: rotate(-18deg) scaleY(1); } 62% { transform: rotate(-18deg) scaleY(0.35); } 70% { transform: rotate(-18deg) scaleY(0.9); } 78% { transform: rotate(-18deg) scaleY(0.25); } }
 }
+
+/* Intro: meet Cady (backlog #19) */
+.icard { display: flex; gap: 14px; align-items: center; width: 100%; text-align: left; padding: 16px; border-radius: 20px; border: 1.5px solid var(--accent); background: var(--surface); color: var(--fg); font: inherit; cursor: pointer; }
+.icard .icady { flex: none; width: 68px; height: 68px; border-radius: 34px; background: var(--accent); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 7px rgba(245, 184, 65, 0.22); }
+.icard .icady svg { width: 50px; height: auto; display: block; }
+.icard .icady svg [fill="#F5B841"] { fill: var(--bg); }
+.icard .icady svg [stroke="#F5B841"] { stroke: var(--bg); }
+.icard .icady svg [fill="#1A1300"] { fill: var(--accent); }
+.icard .icady svg [stroke="#1A1300"] { stroke: var(--accent); }
+.icard .icady .nbub, .icard .icady .ndots, .icard .icady .nbars, .icard .icady .nagain, .icard .icady .nmouth { display: none; }
+.icard .eyebrow { color: var(--accent); }
+.icard .it { font-family: var(--display); font-weight: 700; font-size: 20px; }
+.icard .is { font-size: 14px; color: var(--muted); }
+.icard.done { border-color: var(--line); padding: 10px 14px; }
+.icard.done .icady { width: 48px; height: 48px; box-shadow: none; }
+.icard.done .icady svg { width: 36px; }
+.icard.done .eyebrow { color: var(--muted); }
+.icard.done .it { font-size: 17px; }
+.irow { display: flex; gap: 12px; align-items: flex-start; }
+.irow .lp { padding-top: 6px; font-size: 17px; }
+.lnote.ismall { flex: none; width: 96px; }
+.icheck { min-height: 34px; display: flex; justify-content: center; }
+.icheck span { padding: 6px 14px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); font-weight: 700; font-size: 15px; animation: appear 0.4s ease; }
+.isteps { display: flex; flex-direction: column; gap: 8px; }
+.istep { display: flex; gap: 14px; align-items: center; padding: 10px 14px; border-radius: 14px; background: var(--surface); border: 1.5px solid var(--line); }
+.istep .ico { font-size: 24px; width: 30px; text-align: center; }
+.istep b { display: block; font-size: 16px; }
+.istep span:not(.ico) { font-size: 14px; color: var(--muted); }
+.iaccent { color: var(--accent); }
 </style>
 </head>
 <body>
@@ -350,5 +380,6 @@ h1.lh { font-size: 28px; }
 </div>
 <script src="app.js"></script>
 <script src="lesson.js"></script>
+<script src="intro.js"></script>
 </body>
 </html>

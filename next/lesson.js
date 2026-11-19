@@ -163,10 +163,11 @@ var L = (function () {
   /* The note on its couch, in the middle of the screen. The whole note is the button: before listening it bobs,
      its mouth moves as if about to speak and a "..." bubble shows; while speaking it talks and the bubble shows
      sound bars; once heard it smiles and the bubble offers a replay. No text label: a small hint shows until the first tap. */
-  var NOTE_SCENE =
+  var COUCH =
     '<line x1="20" y1="190" x2="300" y2="190" stroke="#2B3A52" stroke-width="3" stroke-linecap="round"></line>' +
     '<circle cx="262" cy="52" r="17" fill="none" stroke="#4A5E7E" stroke-width="3"></circle><path d="M262 42 V52 L270 57" fill="none" stroke="#4A5E7E" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path>' +
-    '<rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect>' +
+    '<rect x="66" y="84" width="188" height="76" rx="18" fill="#2B3A52"></rect><rect x="50" y="138" width="220" height="40" rx="14" fill="#3A4C69"></rect><rect x="40" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="246" y="114" width="34" height="66" rx="14" fill="#44587A"></rect><rect x="62" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect><rect x="248" y="178" width="10" height="12" rx="2" fill="#2B3A52"></rect>';
+  var CADY =
     '<g class="nbody"><line x1="182" y1="112" x2="182" y2="40" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></line><path d="M182 40 C184 58 206 62 200 86 C200 72 190 66 182 64 Z" fill="#F5B841" stroke="#F5B841" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="160" cy="120" rx="27" ry="21" transform="rotate(-18 160 120)" fill="#F5B841"></ellipse><circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle>' +
     '<path class="nsmile" d="M152 126 Q161 133 171 123" fill="none" stroke="#1A1300" stroke-width="2.4" stroke-linecap="round"></path><ellipse class="nmouth" cx="161" cy="127" rx="5.5" ry="4.5" fill="#1A1300" transform="rotate(-18 161 127)"></ellipse>' +
     '<path d="M150 139 L141 150 L133 150" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path><path d="M168 139 L162 151 L154 151" fill="none" stroke="#F5B841" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>' +
@@ -174,6 +175,7 @@ var L = (function () {
     '<g class="ndots"><circle cx="102" cy="45" r="4.2"></circle><circle cx="116" cy="45" r="4.2"></circle><circle cx="130" cy="45" r="4.2"></circle></g>' +
     '<g class="nbars"><rect x="100" y="41" width="4" height="8" rx="2"></rect><rect x="108" y="35" width="4" height="20" rx="2"></rect><rect x="116" y="38" width="4" height="14" rx="2"></rect><rect x="124" y="42" width="4" height="6" rx="2"></rect></g>' +
     '<path class="nagain" d="M109 45 A7 7 0 1 0 111.5 39.6 M109 36 V40.5 H113.5" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></g>';
+  var NOTE_SCENE = COUCH + CADY;
   var HINT_KEY = 'homekey.noteTapped';
   function noteTapped() { try { return localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; } }
   function ideaHtml() {
@@ -362,5 +364,5 @@ var L = (function () {
     else if (act === 'l-nextch') { var nx = nextChapter(); s = null; if (nx) { startChapter(nx.id); } }
   }
 
-  return { start: start, html: html, click: click, onStop: onStop, onHush: onHush, refresh: refresh, active: function () { return !!s; }, debug: function () { return s; } };
+  return { scene: NOTE_SCENE, cady: CADY, start: start, html: html, click: click, onStop: onStop, onHush: onHush, refresh: refresh, active: function () { return !!s; }, debug: function () { return s; } };
 })();

@@ -187,6 +187,7 @@ function setVoice(v) {
 function hushVoice() {
   Voice.stop();
   if (typeof L !== 'undefined') { L.onHush(); }
+  if (typeof Intro !== 'undefined') { Intro.onHush(); }
   if (typeof state !== 'undefined' && (state.voice === 'speaking' || state.voice === 'loading')) { setVoice('idle'); }
 }
 
@@ -786,6 +787,7 @@ function pathHtml() {
     '<div class="progress" style="margin-top: 6px"><div style="width: ' + pct + '%"></div></div>' +
     '<div class="small muted" style="font-weight: 700">' + done + ' of ' + CONTENT.totalChapters + ' chapters done</div></div>';
 
+  if (typeof Intro !== 'undefined') { h += introCardHtml(); }
   h += '<section class="card"><div class="stack" style="gap: 4px"><div class="eyebrow">Section 1</div><h2>' + esc(s1.title) + '</h2>' +
     '<div class="muted" style="font-size: 14px">' + esc(s1.blurb) + ' You are here.</div></div><div class="trail" style="height: ' + trailHeight + 'px">';
   for (var i = 0; i < s1.chapters.length - 1; i++) {
@@ -806,8 +808,8 @@ function pathHtml() {
       ? 'left: 0; right: calc(' + (100 - xs[i]) + '% + 14px); text-align: right; top: ' + (top + 12) + 'px'
       : 'left: calc(' + xs[i] + '% + 82px); right: 0; top: ' + (top + 10) + 'px';
     if (isDone || open) {
-      h += '<button type="button" class="node ' + (isDone ? 'done' : 'current') + '" data-act="open" data-id="' + c.id + '" style="' + pos + '" aria-label="Open chapter ' + c.id + ', ' + esc(c.title) + '">' + c.id + '</button>';
-      h += '<button type="button" tabindex="-1" aria-hidden="true" class="node-label live' + (isDone ? ' done' : '') + '" data-act="open" data-id="' + c.id + '" style="' + labelPos + '"><span class="t">' + esc(c.title) + '</span><span class="s">' + (isDone ? 'Done · replay' : (i === 0 ? 'Start here' : 'Next up')) + '</span></button>';
+      h += '<button type="button" class="node ' + (isDone ? 'done' : 'current') + (!isDone && i === 0 && typeof Intro !== 'undefined' && !Intro.isDone() ? ' waiting' : '') + '" data-act="open" data-id="' + c.id + '" style="' + pos + '" aria-label="Open chapter ' + c.id + ', ' + esc(c.title) + '">' + c.id + '</button>';
+      h += '<button type="button" tabindex="-1" aria-hidden="true" class="node-label live' + (isDone ? ' done' : '') + '" data-act="open" data-id="' + c.id + '" style="' + labelPos + '"><span class="t">' + esc(c.title) + '</span><span class="s">' + (isDone ? 'Done · replay' : (i === 0 ? (typeof Intro === 'undefined' ? 'Start here' : Intro.isDone() ? 'Next up' : 'Next up, after meeting Cady') : 'Next up')) + '</span></button>';
     } else {
       h += '<div class="node" style="' + pos + '">' + c.id + '</div>';
       h += '<div class="node-label" style="' + labelPos + '"><div class="t">' + esc(c.title) + '</div><div class="s">' + esc(c.sub) + '</div></div>';
@@ -828,6 +830,13 @@ function pathHtml() {
       : '<button type="button" class="btn quiet" id="how" data-act="how">How it works</button><button type="button" class="btn quiet" id="reset-ask" data-act="reset-ask">Reset progress</button>') + '</div>';
   }
   return h;
+}
+
+/* The intro stop above Section 1 (backlog #19): highlighted until the intro is done, then a quiet replay. */
+function introCardHtml() {
+  var done = Intro.isDone();
+  return '<button type="button" class="icard' + (done ? ' done' : '') + '" data-act="intro"><span class="icady"><svg aria-hidden="true" viewBox="120 28 100 120">' + L.cady + '</svg></span>' +
+    '<span class="stack" style="gap: 2px"><span class="eyebrow">' + (done ? 'Done · replay' : 'Start here · 1 minute') + '</span><span class="it">Meet Cady</span><span class="is">Your guide, and a quick sound check</span></span></button>';
 }
 
 /* Chapter screen */
@@ -1083,8 +1092,8 @@ function render(focusId) {
   var voiceKey = state.view + ':' + state.chapter + ':' + state.step;
   if (state.view === 'chapter') { Progress.reach(state.chapter, state.maxStep); }
   if (state.voiceFor !== voiceKey) { state.voiceFor = voiceKey; if (state.voice !== 'idle') { Voice.stop(); state.voice = 'idle'; } }
-  document.body.classList.toggle('in-lesson', state.view === 'lesson');
-  view.innerHTML = state.view === 'welcome' ? welcomeHtml() : state.view === 'path' ? pathHtml() : state.view === 'lesson' ? L.html() : chapterHtml();
+  document.body.classList.toggle('in-lesson', state.view === 'lesson' || state.view === 'intro');
+  view.innerHTML = state.view === 'welcome' ? welcomeHtml() : state.view === 'path' ? pathHtml() : state.view === 'lesson' ? L.html() : state.view === 'intro' ? Intro.html() : chapterHtml();
   if (focusId) { var el = document.getElementById(focusId); if (el) { el.focus({ preventScroll: true }); } }
 }
 function go(viewName) {
@@ -1103,7 +1112,11 @@ function startChapter(id) {
 
 /* Piano keys sound the moment a finger or mouse touches them (pointerdown), not on release (click),
    which would add the time the finger rests on the glass. Click still plays for keyboard users (Enter/Space). */
-function playKey(key) { hushVoice(); Sound.note(Number(key.getAttribute('data-note'))); }
+function playKey(key) {
+  var n = Number(key.getAttribute('data-note'));
+  hushVoice(); Sound.note(n);
+  if (typeof Intro !== 'undefined') { Intro.onKey(n); }
+}
 view.addEventListener('pointerdown', function (e) {
   if (e.button > 0) { return; }
   var key = e.target.closest('[data-note]');
@@ -1116,6 +1129,7 @@ view.addEventListener('click', function (e) {
   if (!el) { return; }
   var act = el.getAttribute('data-act');
   if (state.view === 'lesson' && act.indexOf('l-') === 0) { L.click(act, el); return; }
+  if (state.view === 'intro' && act.indexOf('i-') === 0) { Intro.click(act, el); return; }
   var ch = CONTENT.chapters[state.chapter];
 
   if (act === 'spot') {
@@ -1152,12 +1166,13 @@ view.addEventListener('click', function (e) {
   }
   else if (act === 'how') { go('welcome'); render(); }
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
+  else if (act === 'intro') { Intro.start(); }
   else if (act === 'open') { startChapter(el.getAttribute('data-id')); }
   else if (act === 'again') { startChapter(state.chapter); }
   else if (act === 'back') { go('path'); state.askReset = false; render(); }
   else if (act === 'reset-ask') { state.askReset = true; render('reset-no'); }
   else if (act === 'reset-no') { state.askReset = false; render('reset-ask'); }
-  else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); state.askReset = false; go('welcome'); render(); }
+  else if (act === 'reset-yes') { Progress.reset(); setWelcomed(false); if (typeof Intro !== 'undefined') { Intro.setDone(false); } state.askReset = false; go('welcome'); render(); }
   else if (act === 'demo') {
     stopAll(); lastPlayLen = 2; ch.demo();
     markHeard();
