@@ -126,7 +126,8 @@ var Intro = (function () {
       '<div class="lbar" role="progressbar" aria-label="Intro progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div style="width: ' + pct + '%"></div></div></div>';
   }
   function bottomHtml(label, on, act) {
-    return '<div class="lbottom"><button type="button" class="lgo' + (on ? ' on' : '') + '" data-act="' + (act || 'i-next') + '"' + (on ? '' : ' aria-disabled="true"') + '>' + label + '</button></div>';
+    var skip = '<div class="lskipslot">' + (on ? '' : '<button type="button" class="llink lskip" data-act="i-skip">Skip</button>') + '</div>';
+    return '<div class="lbottom"><button type="button" class="lgo' + (on ? ' on' : '') + '" data-act="' + (act || 'i-next') + '"' + (on ? '' : ' aria-disabled="true"') + '>' + label + '</button>' + skip + '</div>';
   }
   function body() {
     var sc = cur(), h = '<h1 class="lh">' + esc(sc.title) + '</h1>';
@@ -175,6 +176,9 @@ var Intro = (function () {
   function click(act, el) {
     if (act === 'i-close') { stopAll(); clearTimers(); s = null; go('path'); render(); }
     else if (act === 'i-speak') { tapCady(); }
+    else if (act === 'i-skip') {
+      if (s.i < SCREENS.length - 1) { goTo(s.i + 1); } else { stopAll(); clearTimers(); setDone(true); s = null; startChapter('1a'); }
+    }
     else if (act === 'i-read') { s.read = true; refresh(); }
     else if (act === 'i-next') { if (canContinue() && s.i < SCREENS.length - 1) { goTo(s.i + 1); } }
     else if (act === 'i-piano') {

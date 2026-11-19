@@ -157,8 +157,11 @@ var L = (function () {
     if (!voiceFor(name) || s.voice !== 'idle' || s.heard[name] || s.read[name]) { return ''; }
     return '<button type="button" class="llink" data-act="l-read">Can’t play sound? Read it instead</button>';
   }
-  function bottomHtml(label, on, act) {
-    return '<div class="lbottom" id="lbottom"><button type="button" class="lgo' + (on ? ' on' : '') + '" data-act="' + (act || 'l-next') + '"' + (on ? '' : ' aria-disabled="true"') + '>' + label + '</button></div>';
+  // A screen still waiting for its action shows a small "Skip" under the gray Continue (handy when testing,
+  // and for anyone who'd rather not wait for the voice). Its slot keeps its height, so nothing jumps.
+  function bottomHtml(label, on, act, noSkip) {
+    var skip = act || noSkip ? '' : '<div class="lskipslot">' + (on ? '' : '<button type="button" class="llink lskip" data-act="l-skipscreen">Skip</button>') + '</div>';
+    return '<div class="lbottom" id="lbottom"><button type="button" class="lgo' + (on ? ' on' : '') + '" data-act="' + (act || 'l-next') + '"' + (on ? '' : ' aria-disabled="true"') + '>' + label + '</button>' + skip + '</div>';
   }
   /* The note on its couch, in the middle of the screen. The whole note is the button: before listening it bobs,
      its mouth moves as if about to speak and a "..." bubble shows; while speaking it talks and the bubble shows
@@ -263,7 +266,7 @@ var L = (function () {
     h += '</div>';
     if (!picked) {
       h += '<button type="button" class="llink" data-act="l-skip">Skip the ear training</button>';
-      return h + bottomHtml('Continue', false);
+      return h + bottomHtml('Continue', false, null, true); // has its own "Skip the ear training"
     }
     var good = picked === s.q.q, last = s.round >= c.rounds;
     var words = c.choose.verdict(s.q, good).replace(/^(Correct|Not quite): /, '');
@@ -323,6 +326,7 @@ var L = (function () {
     else if (act === 'l-speak') { try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {} speak(); }
     else if (act === 'l-read') { s.read[name] = true; refresh(); }
     else if (act === 'l-next') { if (canContinue(name) && s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
+    else if (act === 'l-skipscreen') { if (s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
     else if (act === 'l-demo') { stopAll(); c.demo(); s.demoPlayed = true; refresh(); }
     else if (act === 'l-groove') {
       var gi = el.getAttribute('data-i'), gid = gi === 'play' ? 'play' : 'song' + gi;
