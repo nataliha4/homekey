@@ -19,7 +19,7 @@ var Intro = (function () {
       // Measured from the pauses in this recording: measure again if the line is re-recorded.
       cues: [4.6, 5.75, 7.7, 8.95, 10.75], cuesEnd: 12.4 },
     { id: 'piano', title: 'Do you have a piano nearby?', voice: 'voice-intro-4-piano.mp3',
-      words: 'Do you have a piano or keyboard nearby?',
+      words: 'Do you have a real piano nearby? A digital one counts too!',
       after: { voice: 'voice-intro-4-piano-ok.mp3', words: 'No problem either way. You can always play on the keys in the app.' } },
     { id: 'ready', title: 'Ready?', voice: 'voice-intro-5-ready.mp3',
       words: 'Ready? Let\'s start with your first chapter: One chord, home.' }
@@ -153,9 +153,9 @@ var Intro = (function () {
     }
     if (sc.id === 'piano') {
       var a = s.piano;
-      h += smallCady('A piano or a keyboard, at home?');
+      h += smallCady('A real piano or a digital one, at home?');
       h += '<div class="grow"></div><div class="choices">' +
-        '<button type="button" class="choice' + (a === 'yes' ? ' right' : a ? ' dim' : '') + '" data-act="i-piano" data-a="yes"><span class="emo" aria-hidden="true">🎹</span><b>Yes, I do</b><span>piano or keyboard</span></button>' +
+        '<button type="button" class="choice' + (a === 'yes' ? ' right' : a ? ' dim' : '') + '" data-act="i-piano" data-a="yes"><span class="emo" aria-hidden="true">🎹</span><b>Yes, I do</b><span>real or digital</span></button>' +
         '<button type="button" class="choice' + (a === 'no' ? ' right' : a ? ' dim' : '') + '" data-act="i-piano" data-a="no"><span class="emo" aria-hidden="true">📱</span><b>Not right now</b><span>I’ll use the app</span></button></div>';
       h += '<p class="lsmall">' + (a ? esc(sc.after.words) : '') + '</p><div class="grow"></div>';
       return h + bottomHtml('Continue', canContinue());
