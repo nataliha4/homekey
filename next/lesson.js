@@ -6,6 +6,9 @@ var AUDIO_BASE = '../'; // the recordings live in the main folder, one level up
 var NEW_LESSON = { '1a': true };
 
 // Play step text for the new design (the old recording, voice-1a-play.mp3, no longer matches it).
+// v2 voices that live in this folder (not the main one), e.g. the ElevenLabs stand-in for the 1a Idea (backlog #13).
+CONTENT.chapters['1a'].voiceV2 = 'voice-1a-idea-v2.mp3';
+
 CONTENT.chapters['1a'].play2 = {
   title: 'Your turn to play',
   text: 'Time to make your own little tune! Here\'s how: start the groove, and play along! Any melody or sequence of notes, one note at a time, in any order and rhythm you like.',
@@ -38,7 +41,7 @@ var L = (function () {
   /* ---------- Voice: the note reads the screen's text aloud ---------- */
   function voiceFor(name) {
     var c = ch();
-    var v = name === 'idea' ? c.voice && { url: c.voice.audio, words: (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain)).join(' ') }
+    var v = name === 'idea' ? c.voice && { url: c.voiceV2 || c.voice.audio, local: !!c.voiceV2, words: (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain)).join(' ') }
       : name === 'song0' ? c.listenVoice && { url: c.listenVoice.audio, words: c.listenIntro }
       : name === 'ear' ? (hasGuide(c.choose) && s.round === 1 && !s.picked) && { url: c.choose.voice.audio, words: c.choose.intro }
       : name === 'recap' ? hasGuide(c.recapGuide) && { url: c.recapGuide.voice.audio, words: [c.recapGuide.intro].concat(c.recap).join(' ') }
@@ -58,7 +61,7 @@ var L = (function () {
     var begin = function () { if (s && cur() === name && s.voice === 'loading') { s.voice = 'speaking'; refresh(); } };
     var finish = function () { if (s && cur() === name && (s.voice === 'speaking' || s.voice === 'loading')) { voiceEnded(); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
-    if (v.url) { Voice.play(AUDIO_BASE + v.url, v.words, begin, finish); } else { Voice.speak(v.words, begin, finish); }
+    if (v.url) { Voice.play((v.local ? '' : AUDIO_BASE) + v.url, v.words, begin, finish); } else { Voice.speak(v.words, begin, finish); }
   }
   // Heard, or stopped part way: either way the screen moves on to its next action.
   function voiceEnded() { s.voice = 'idle'; s.heard[cur()] = true; refresh(); }
