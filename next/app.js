@@ -776,7 +776,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-19k';
+var APP_VERSION = '2026-11-20a';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
@@ -850,8 +850,9 @@ function pathHtml() {
 /* The intro stop above Section 1 (backlog #19): highlighted until the intro is done, then a quiet replay. */
 function introCardHtml() {
   var done = Intro.isDone();
-  return '<button type="button" class="icard' + (done ? ' done' : '') + '" data-act="intro"><span class="icady"><svg aria-hidden="true" viewBox="120 28 100 120">' + L.cady + '</svg></span>' +
-    '<span class="stack" style="gap: 2px"><span class="eyebrow">' + (done ? 'Done · replay' : 'Start here · 1 minute') + '</span><span class="it">Meet Cady</span><span class="is">Your guide, and a quick sound check</span></span></button>';
+  return '<button type="button" class="icard' + (done ? ' done' : '') + '" data-act="intro"><span class="icady"><svg aria-hidden="true" viewBox="120 28 100 120">' + L.cady + '</svg>' +
+    (done ? '<span class="icheck-badge" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F1724" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"></path></svg></span>' : '') + '</span>' +
+    '<span class="stack" style="gap: 2px"><span class="eyebrow">' + (done ? '✓ Done · replay' : 'Start here · 1 minute') + '</span><span class="it">Meet Cady</span><span class="is">Your guide, and a quick sound check</span></span></button>';
 }
 
 /* Chapter screen */
