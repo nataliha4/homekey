@@ -184,11 +184,11 @@ var L = (function () {
   function ideaHtml() {
     var c = ch(), shown = textShown('idea'), v = s.voice;
     var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : (s.heard.idea || s.read.idea) ? 'heard' : 'idle';
-    var label = st === 'speaking' || st === 'loading' ? 'Stop the note' : st === 'heard' ? 'Hear the note again' : 'Tap the note to listen';
+    var label = st === 'speaking' || st === 'loading' ? 'Stop Cady' : st === 'heard' ? 'Hear Cady again' : 'Tap Cady to listen';
     var h = '<h1 class="lh">' + esc(c.headline) + '</h1>';
     h += '<div class="lstage"><button type="button" class="lnote" data-act="l-speak" data-state="' + st + '" aria-label="' + label + '">' +
       '<svg aria-hidden="true" viewBox="30 10 260 190">' + NOTE_SCENE + '</svg></button>' +
-      '<div class="lhint">' + (st === 'idle' && !noteTapped() ? 'Tap the note' : '') + '</div></div>';
+      '<div class="lhint">' + (st === 'idle' ? 'Tap Cady' : '') + '</div></div>'; // shown every time she waits, as in the intro
     h += '<div class="lsubs" aria-live="polite">' + (shown ? c.explain.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') : '') + '</div>';
     h += '<div class="llinkslot">' + readLink('idea') + '</div>'; // a fixed slot, so nothing moves when the link goes away
     return h + bottomHtml('Continue', canContinue('idea'));
