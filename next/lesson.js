@@ -181,11 +181,17 @@ var L = (function () {
   var NOTE_SCENE = COUCH + CADY;
   var HINT_KEY = 'homekey.noteTapped';
   function noteTapped() { try { return localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; } }
+  // Which of the five steps a screen belongs to, as a small label above its headline (same icons as the intro).
+  var STEP_LABEL = [['\uD83D\uDCA1', 'Idea'], ['\uD83C\uDFB5', 'Songs'], ['\uD83D\uDC42', 'Ear training'], ['\uD83C\uDFB9', 'Play'], ['\uD83D\uDCCC', 'Recap']];
+  function stepLabel(name) {
+    var x = STEP_LABEL[stepOf(name)];
+    return '<div class="eyebrow lstep"><span aria-hidden="true">' + x[0] + '</span>' + x[1] + '</div>';
+  }
   function ideaHtml() {
     var c = ch(), shown = textShown('idea'), v = s.voice;
     var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : (s.heard.idea || s.read.idea) ? 'heard' : 'idle';
     var label = st === 'speaking' || st === 'loading' ? 'Stop Cady' : st === 'heard' ? 'Hear Cady again' : 'Tap Cady to listen';
-    var h = '<h1 class="lh">' + esc(c.headline) + '</h1>';
+    var h = stepLabel('idea') + '<h1 class="lh">' + esc(c.headline) + '</h1>';
     h += '<div class="lstage"><button type="button" class="lnote" data-act="l-speak" data-state="' + st + '" aria-label="' + label + '">' +
       '<svg aria-hidden="true" viewBox="30 10 260 190">' + NOTE_SCENE + '</svg></button>' +
       '<div class="lhint">' + (st === 'idle' ? 'Tap Cady' : '') + '</div></div>'; // shown every time she waits, as in the intro
@@ -194,7 +200,7 @@ var L = (function () {
     return h + bottomHtml('Continue', canContinue('idea'));
   }
   function demoHtml() {
-    var h = '<h1 class="lh">Hear a home chord</h1><p class="lp">Tap play and notice how settled it sounds.</p>';
+    var h = stepLabel('demo') + '<h1 class="lh">Hear a home chord</h1><p class="lp">Tap play and notice how settled it sounds.</p>';
     h += '<div class="lmid"><div class="lcenter"><button type="button" class="lround' + (s.demoPlayed ? '' : ' primary') + '" data-act="l-demo" aria-label="' + (s.demoPlayed ? 'Play the home chord again' : 'Play the home chord') + '">' + (s.demoPlayed ? ICON.again : ICON.play) + '</button>' +
       '<div class="lroundlbl' + (s.demoPlayed ? '' : ' on') + '">' + (s.demoPlayed ? 'Play it again' : 'Play the home chord') + '</div></div>';
     h += keyboardHtml() + '</div>'; // play button and keys together, centered in the space above Continue
@@ -220,7 +226,7 @@ var L = (function () {
   }
   function songHtml(i) {
     var c = ch(), song = c.songs[i], id = 'song' + i;
-    var h = '<h1 class="lh">' + (i === 0 ? 'Hear it in a song' : 'One more song') + '</h1>';
+    var h = stepLabel(id) + '<h1 class="lh">' + (i === 0 ? 'Hear it in a song' : 'One more song') + '</h1>';
     if (i === 0) {
       h += '<div class="lsub">' + (textShown(id) ? '<p>' + esc(c.listenIntro) + '</p>' : '') + '</div>';
       h += '<div class="lguide">' + pillHtml(id) + '</div>';
@@ -244,7 +250,7 @@ var L = (function () {
   }
   function earHtml() {
     var c = ch(), picked = s.picked, waitVoice = voiceFor('ear') && voiceFirst('ear');
-    var h = '<div class="spread"><div class="eyebrow">Ear training</div>' + dotsHtml(c.rounds, s.results, s.round) + '</div>';
+    var h = '<div class="spread lsteprow">' + stepLabel('ear') + dotsHtml(c.rounds, s.results, s.round) + '</div>';
     h += '<h1 class="lh">' + esc(c.choose.prompt) + '</h1>';
     if (voiceFor('ear')) {
       h += '<div class="lsub">' + (textShown('ear') ? '<p>' + esc(c.choose.intro) + '</p>' : '') + '</div><div class="lguide">' + pillHtml('ear') + '</div>';
@@ -276,7 +282,7 @@ var L = (function () {
   }
   function playHtml() {
     var p = ch().play2;
-    var h = '<h1 class="lh">' + esc(p.title) + '</h1><p class="lp">' + esc(p.text) + '</p>';
+    var h = stepLabel('play') + '<h1 class="lh">' + esc(p.title) + '</h1><p class="lp">' + esc(p.text) + '</p>';
     h += '<div class="ltips"><div class="eyebrow">Tips for a pro sound</div>' + p.tips.map(function (t) { return '<div class="ltip"><span></span><div>' + t + '</div></div>'; }).join('') + '</div>';
     h += '<div class="grow"></div>' + keyboardHtml().replace('<div class="kb">', '<div class="lend" aria-hidden="true"><span>End here</span></div><div class="kb">');
     h += '<p class="lsmall">No piano nearby? Play on these keys.</p>';
@@ -292,7 +298,7 @@ var L = (function () {
   }
   function recapHtml() {
     var c = ch(), n = nextChapter(), got = s.results.filter(Boolean).length;
-    var h = '<div class="lwin">' + ICON.cheer + '<div><h1 class="lh">Chapter ' + esc(s.id) + ' done!</h1>' +
+    var h = stepLabel('recap') + '<div class="lwin">' + ICON.cheer + '<div><h1 class="lh">Chapter ' + esc(s.id) + ' done!</h1>' +
       (s.results.length ? '<div class="lgot">You got ' + got + ' of ' + s.results.length + ' by ear.</div>' : '') + '</div></div>';
     if (s.results.length) { h += dotsHtml(s.results.length, s.results, 0); }
     h += '<div class="lcard"><div class="spread"><div class="eyebrow">To remember</div>' + pillHtml('recap', true) + '</div>' +
