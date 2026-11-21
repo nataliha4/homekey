@@ -24,6 +24,7 @@ var L = (function () {
     stop: '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>',
     again: '<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 A8 8 0 1 0 7 5.8"></path><path d="M4 4 V9 H9"></path></svg>',
     bars: '<svg class="lbars" aria-hidden="true" width="30" height="22" viewBox="0 0 30 22"><rect x="1" y="8" width="4" height="6" rx="2"></rect><rect x="9" y="2" width="4" height="18" rx="2"></rect><rect x="17" y="5" width="4" height="12" rx="2"></rect><rect x="25" y="9" width="4" height="4" rx="2"></rect></svg>',
+    back: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12 H5 M11 6 L5 12 L11 18"></path></svg>',
     close: '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg>',
     phones: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 14 V12 A9 9 0 0 1 21 12 V14"></path><rect x="3" y="14" width="4" height="7" rx="1.5" fill="currentColor"></rect><rect x="17" y="14" width="4" height="7" rx="1.5" fill="currentColor"></rect></svg>',
     arrow: '<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 H19 M13 6 L19 12 L13 18"></path></svg>',
@@ -142,6 +143,7 @@ var L = (function () {
   function topHtml() {
     var pct = Math.max(4, Math.round(s.i / (s.list.length - 1) * 100));
     return '<div class="ltop"><button type="button" class="lx" data-act="l-close" aria-label="Close lesson">' + ICON.close + '</button>' +
+      (s.i > 0 ? '<button type="button" class="lx lback" data-act="l-back" aria-label="Back to the previous screen">' + ICON.back + '</button>' : '') +
       '<div class="lbar" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div style="width: ' + pct + '%"></div></div></div>';
   }
   function pillHtml(name, optional) {
@@ -332,6 +334,7 @@ var L = (function () {
     else if (act === 'l-speak') { try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {} speak(); }
     else if (act === 'l-read') { s.read[name] = true; refresh(); }
     else if (act === 'l-next') { if (canContinue(name) && s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
+    else if (act === 'l-back') { if (s.i > 0) { goTo(s.i - 1); } } // the screen comes back as it was left (ear training starts over)
     else if (act === 'l-skipscreen') { if (s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
     else if (act === 'l-demo') { stopAll(); c.demo(); s.demoPlayed = true; refresh(); }
     else if (act === 'l-groove') {

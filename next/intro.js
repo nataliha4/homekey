@@ -77,13 +77,14 @@ var Intro = (function () {
     go('intro');
     render();
   }
-  function goTo(i) {
+  function goTo(i, back) {
     stopAll(); clearTimers();
     s.i = i; s.voice = 'idle'; s.saying = null;
     state.lit = []; state.caption = '';
     render();
     window.scrollTo(0, 0);
-    if (i > 0) { say(cur(), cur().id); } // reached by a tap on Continue, so the browser lets her speak right away
+    if (i > 0 && !back) { say(cur(), cur().id); } // reached by a tap on Continue, so the browser lets her speak right away
+    if (back && cur().id === 'sound' && s.answered.sound) { light(s.soundNote ? [s.soundNote] : [], ''); }
   }
   function canContinue() {
     var id = cur().id;
@@ -95,7 +96,7 @@ var Intro = (function () {
   function onKey(note) {
     if (!s || state.view !== 'intro' || cur().id !== 'sound') { return; }
     if (!s.answered.sound) {
-      s.answered.sound = true;
+      s.answered.sound = true; s.soundNote = note;
       light([note], '');
       refresh();
       var i = s.i;
@@ -123,6 +124,7 @@ var Intro = (function () {
   function topHtml() {
     var pct = [4, 25, 50, 75, 100][s.i];
     return '<div class="ltop"><button type="button" class="lx" data-act="i-close" aria-label="Close the intro"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg></button>' +
+      (s.i > 0 ? '<button type="button" class="lx lback" data-act="i-back" aria-label="Back to the previous screen">' + '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12 H5 M11 6 L5 12 L11 18"></path></svg>' + '</button>' : '') +
       '<div class="lbar" role="progressbar" aria-label="Intro progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div style="width: ' + pct + '%"></div></div></div>';
   }
   function bottomHtml(label, on, act) {
@@ -179,6 +181,7 @@ var Intro = (function () {
     else if (act === 'i-skip') {
       if (s.i < SCREENS.length - 1) { goTo(s.i + 1); } else { stopAll(); clearTimers(); setDone(true); s = null; startChapter('1a'); }
     }
+    else if (act === 'i-back') { if (s.i > 0) { goTo(s.i - 1, true); } } // no auto-voice: tap Cady to hear her again
     else if (act === 'i-read') { s.read = true; refresh(); }
     else if (act === 'i-next') { if (canContinue() && s.i < SCREENS.length - 1) { goTo(s.i + 1); } }
     else if (act === 'i-piano') {
