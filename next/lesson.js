@@ -15,8 +15,13 @@ CONTENT.chapters['1a'].songsV2 = [
   { headline: 'Hear it in a song', voice: 'voice-1a-songs-v2.mp3',
     intro: 'Songs that never leave home are rare, but they exist! Let\'s hear a few. Maybe you know some of them already.' },
   { headline: 'One more song', voice: 'voice-1a-song2-v2.mp3',
-    intro: 'Next up: Coconut! You might hear one spicy extra note in the chord. Don\'t worry about it for now. We\'ll get to it soon!' }
+    intro: 'Next up: Coconut! You might hear one spicy extra note in the chord. Don\'t worry about it for now. We\'ll get to it soon!' },
+  { headline: 'One last song', voice: 'voice-1a-song3-v2.mp3',
+    intro: 'Here\'s something different: Inventions, by Maserati. No words, just guitar patterns that repeat over a steady, driving beat. And it stays home the whole time! Listen to how much can happen without ever leaving.' }
 ];
+// The third song, v2 only (added Nov 25, 2026): an instrumental that never leaves its one home.
+CONTENT.chapters['1a'].songs.push({ title: 'Inventions', artist: 'Maserati', kind: 'Instrumental home',
+  url: 'https://open.spotify.com/track/25WeY1hkgBRLjwl0R7JiB8', spotifyId: '25WeY1hkgBRLjwl0R7JiB8' });
 
 CONTENT.chapters['1a'].play2 = {
   title: 'Your turn to play',
