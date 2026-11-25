@@ -35,7 +35,11 @@ CONTENT.chapters['1a'].play2 = {
   text: 'Time to make your own little tune! Here\'s how: start the groove, and play along! Any melody or sequence of notes, one note at a time, in any order and rhythm you like.',
   tips: ['Skip the black keys.', 'When the groove stops, end on <b>C</b>. Notice how it feels like landing home.'],
   caption: 'The groove plays C major: C, E, G',
-  beats: repeat(C_MAJOR, 24), beatDur: 0.75 // about 18 seconds, enough time for a little tune
+  beats: repeat(C_MAJOR, 24), beatDur: 0.75, // about 18 seconds, enough time for a little tune
+  // New design (Nov 25, 2026): Cady sets up the exercise, then a short reminder replaces her line on screen.
+  voice: 'voice-1a-play-v2.mp3',
+  intro: 'Your turn! In this groove, the chord stays home the whole time. But your melody doesn\'t have to! Make up a little tune, one note at a time. Skip the black keys, and when the groove stops, end on C. Hear how it lands home?',
+  reminder: 'Make up a little tune on the white keys. When the groove stops, end on <b class="iaccent">C</b>!'
 };
 
 var L = (function () {
@@ -68,6 +72,7 @@ var L = (function () {
     var v = name === 'idea' ? c.voice && { url: c.voiceV2 || c.voice.audio, local: !!c.voiceV2, words: (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain)).join(' ') }
       : v2Song(name) ? { url: v2Song(name).voice, local: true, words: v2Song(name).intro }
       : name === 'song0' ? c.listenVoice && { url: c.listenVoice.audio, words: c.listenIntro }
+      : name === 'play' && c.play2 && c.play2.voice ? { url: c.play2.voice, local: true, words: c.play2.intro }
       : name === 'ear' && c.earV2 ? (s.round === 1 && !s.picked) && { url: c.earV2.voice, local: true, words: c.earV2.intro }
       : name === 'ear' ? (hasGuide(c.choose) && s.round === 1 && !s.picked) && { url: c.choose.voice.audio, words: c.choose.intro }
       : name === 'recap' ? hasGuide(c.recapGuide) && { url: c.recapGuide.voice.audio, words: [c.recapGuide.intro].concat(c.recap).join(' ') }
@@ -165,13 +170,13 @@ var L = (function () {
     state.lit = []; state.caption = '';
     if (name === 'demo') { state.lit = C_MAJOR.notes; state.caption = 'Home: C major (C, E, G)'; }
     if (name === 'ear') { setupEar(); }
-    if (name === 'play') { state.lit = C_MAJOR.notes; state.caption = ch().play2.caption; }
+    if (name === 'play' && !ch().play2.voice) { state.lit = C_MAJOR.notes; state.caption = ch().play2.caption; }
     render();
     window.scrollTo(0, 0);
     // Without a voice guide, the first chords play as soon as the ear training opens.
     if (name === 'ear' && !voiceFor('ear')) { ask(); }
     // The new Songs screen is reached by tapping Continue, so Cady may start by herself (not when coming back).
-    if ((v2Song(name) || (name === 'ear' && ch().earV2)) && !back && !s.heard[name] && voiceFor(name)) { speak(); }
+    if ((v2Song(name) || (name === 'ear' && ch().earV2) || (name === 'play' && ch().play2.voice)) && !back && !s.heard[name] && voiceFor(name)) { speak(); }
   }
   function canContinue(name) {
     var si = songIndex(name);
@@ -374,8 +379,29 @@ var L = (function () {
     return h + '<div class="lfeed ' + (good ? 'good' : 'bad') + '" id="lbottom" role="status"><div class="lfrow"><div class="lfic">' + (good ? ICON.check : ICON.cross) + '</div><div><div class="lft">' + (good ? 'Correct!' : 'Not quite') + '</div><div class="lfs">' + esc(words) + '</div></div></div>' +
       '<button type="button" class="lgo on" data-act="l-round">' + (last ? 'Continue' : 'Next round' + ICON.arrow) + '</button></div>' + (c.earV2 ? '</div>' : '');
   }
+  function hasPiano() { try { return localStorage.getItem('homekey.hasPiano') === 'yes'; } catch (e) { return false; } }
+  function play2Html() {
+    var p = ch().play2, v = s.voice, done = !!s.heard.play || !!s.read.play;
+    var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : done ? 'heard' : 'idle';
+    var h = stepLabel('play') + '<h1 class="lh">' + esc(p.title) + '</h1>';
+    // While she talks, her full line; once she's done, a short reminder (the tips) takes its place.
+    h += '<div class="irow lsongrow"><button type="button" class="lnote ismall" data-act="l-speak" data-state="' + st + '" aria-label="' + (st === 'speaking' || st === 'loading' ? 'Stop Cady' : 'Hear Cady again') + '">' +
+      '<svg aria-hidden="true" viewBox="80 20 140 140">' + CADY + '</svg></button>' +
+      '<p class="lp lsubline' + (done ? ' short' : '') + '" aria-live="polite">' + (done ? p.reminder : v !== 'idle' ? esc(p.intro) : '') + '</p></div>';
+    if (!done) {
+      h += '<div class="llinkslot"><button type="button" class="llink" data-act="l-read">Can’t play sound? Read it instead</button></div>';
+      return h + '<div class="grow"></div>' + bottomHtml('I played it', false);
+    }
+    h += '<div class="grow"></div>' + keyboardHtml().replace('<div class="kb">', '<div class="lend" aria-hidden="true"><span>End here</span></div><div class="kb">');
+    h += '<p class="lsmall">' + (hasPiano() ? 'Play on your piano, or on these keys.' : 'Play on these keys.') + '</p>';
+    h += s.groove === 'play'
+      ? '<button type="button" class="btn ready lgroove" data-act="l-groove" data-i="play">' + ICON.stop + 'Stop</button>'
+      : '<button type="button" class="btn lgroove' + (s.playGroove ? ' ready' : ' primary') + '" data-act="l-groove" data-i="play">' + (s.playGroove ? ICON.again + 'Play the groove again' : ICON.play + 'Start the groove') + '</button>';
+    return h + bottomHtml('I played it', canContinue('play'));
+  }
   function playHtml() {
     var p = ch().play2;
+    if (p.voice) { return play2Html(); }
     var h = stepLabel('play') + '<h1 class="lh">' + esc(p.title) + '</h1><p class="lp">' + esc(p.text) + '</p>';
     h += '<div class="ltips"><div class="eyebrow">Tips for a pro sound</div>' + p.tips.map(function (t) { return '<div class="ltip"><span></span><div>' + t + '</div></div>'; }).join('') + '</div>';
     h += '<div class="grow"></div>' + keyboardHtml().replace('<div class="kb">', '<div class="lend" aria-hidden="true"><span>End here</span></div><div class="kb">');
