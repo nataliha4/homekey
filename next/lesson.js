@@ -9,6 +9,13 @@ var NEW_LESSON = { '1a': true };
 // v2 voices that live in this folder (not the main one), e.g. the ElevenLabs stand-in for the 1a Idea (backlog #13).
 CONTENT.chapters['1a'].voiceV2 = 'voice-1a-idea-v2.mp3';
 
+// Songs, first screen (new design, Nov 25, 2026): no groove; Cady says her line, then the song card appears.
+// voice-1a-songs-v2.mp3 is still to be recorded in ElevenLabs; until then the browser's own voice reads the line.
+CONTENT.chapters['1a'].songsV2 = {
+  intro: 'These songs stay home the whole way. Hear the real song, and listen for that settled feeling.',
+  voice: 'voice-1a-songs-v2.mp3'
+};
+
 CONTENT.chapters['1a'].play2 = {
   title: 'Your turn to play',
   text: 'Time to make your own little tune! Here\'s how: start the groove, and play along! Any melody or sequence of notes, one note at a time, in any order and rhythm you like.',
@@ -43,7 +50,7 @@ var L = (function () {
   function voiceFor(name) {
     var c = ch();
     var v = name === 'idea' ? c.voice && { url: c.voiceV2 || c.voice.audio, local: !!c.voiceV2, words: (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain)).join(' ') }
-      : name === 'song0' ? c.listenVoice && { url: c.listenVoice.audio, words: c.listenIntro }
+      : name === 'song0' ? (c.songsV2 ? { url: c.songsV2.voice, local: true, words: c.songsV2.intro } : c.listenVoice && { url: c.listenVoice.audio, words: c.listenIntro })
       : name === 'ear' ? (hasGuide(c.choose) && s.round === 1 && !s.picked) && { url: c.choose.voice.audio, words: c.choose.intro }
       : name === 'recap' ? hasGuide(c.recapGuide) && { url: c.recapGuide.voice.audio, words: [c.recapGuide.intro].concat(c.recap).join(' ') }
       : null;
@@ -116,7 +123,7 @@ var L = (function () {
     go('lesson');
     render();
   }
-  function goTo(i) {
+  function goTo(i, back) {
     stopAll();
     s.i = i; s.voice = 'idle'; s.spotOpen = null; s.groove = null;
     var name = cur();
@@ -129,12 +136,14 @@ var L = (function () {
     window.scrollTo(0, 0);
     // Without a voice guide, the first chords play as soon as the ear training opens.
     if (name === 'ear' && !voiceFor('ear')) { ask(); }
+    // The new Songs screen is reached by tapping Continue, so Cady may start by herself (not when coming back).
+    if (name === 'song0' && ch().songsV2 && !back && !s.heard.song0 && voiceFor('song0')) { speak(); }
   }
   function canContinue(name) {
     var si = songIndex(name);
     if (name === 'idea') { return !voiceFor('idea') || !!s.heard.idea || !!s.read.idea; }
     if (name === 'demo') { return s.demoPlayed; }
-    if (si >= 0) { var sg = s.songs['song' + si] || {}; return !!sg.real || (!!sg.groove && !ch().songs[si].url); }
+    if (si >= 0) { var sg = s.songs['song' + si] || {}; if (si === 0 && ch().songsV2) { return !!sg.real || !ch().songs[0].url; } return !!sg.real || (!!sg.groove && !ch().songs[si].url); }
     if (name === 'play') { return s.playGroove; }
     return true;
   }
@@ -207,6 +216,34 @@ var L = (function () {
       '<div class="lroundlbl' + (s.demoPlayed ? '' : ' on') + '">' + (s.demoPlayed ? 'Play it again' : 'Play the home chord') + '</div></div>';
     h += keyboardHtml() + '</div>'; // play button and keys together, centered in the space above Continue
     return h + bottomHtml('Continue', canContinue('demo'));
+  }
+  // New first Songs screen: only the real song (the card appears once Cady is done, stopped, or read).
+  function song0CtlHtml() {
+    var song = ch().songs[0], sg = s.songs.song0 || {};
+    if (hasSpot(song)) {
+      if (s.spotOpen === 0) { return ''; }
+      return '<button type="button" class="btn lgroove' + (sg.real ? ' ready' : ' primary') + '" data-act="l-spot" data-i="0">' + ICON.phones + (sg.real ? 'Hear the real song again' : 'Hear the real song') + '</button>' +
+        '<div class="lnext">Plays from Spotify, right here</div>';
+    }
+    return song.url ? '<a class="btn lgroove' + (sg.real ? ' ready' : ' primary') + '" data-act="l-link" data-i="0" href="' + song.url + '" target="_blank" rel="noopener">' + ICON.phones + 'Hear the real song on Spotify ↗</a>' : '';
+  }
+  function song0Html() {
+    var c = ch(), song = c.songs[0], v = s.voice, done = !!s.heard.song0 || !!s.read.song0;
+    var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : done ? 'heard' : 'idle';
+    var label = st === 'speaking' || st === 'loading' ? 'Stop Cady' : st === 'heard' ? 'Hear Cady again' : 'Tap Cady to listen';
+    var h = stepLabel('song0') + '<h1 class="lh">Hear it in a song</h1>';
+    h += '<div class="irow lsongrow"><button type="button" class="lnote ismall" data-act="l-speak" data-state="' + st + '" aria-label="' + label + '">' +
+      '<svg aria-hidden="true" viewBox="80 20 140 140">' + CADY + '</svg></button>' +
+      '<p class="lp lsubline" aria-live="polite">' + (v !== 'idle' || done ? esc(c.songsV2.intro) : '') + '</p></div>';
+    h += '<div class="llinkslot">' + (done ? '' : '<button type="button" class="llink" data-act="l-read">Can’t play sound? Read it instead</button>') + '</div>';
+    h += '<div class="grow"></div>';
+    if (done) {
+      h += '<div class="lcard lappear"><div class="lsong"><div class="lsongic">' + ICON.note + '</div><div><div class="lsongt">' + esc(song.title) + '</div><div class="lsongs">' + esc(song.artist) + ' · ' + esc(song.kind) + '</div></div></div>' +
+        (song.note ? '<div class="lsongs">' + esc(song.note) + '</div>' : '') +
+        '<div class="lctl" id="song-ctl">' + song0CtlHtml() + '</div><div class="spot lspot" id="spot-0"></div></div>';
+    }
+    h += '<div class="grow"></div>';
+    return h + bottomHtml('Continue', canContinue('song0'));
   }
   function songCtlHtml(i) {
     var c = ch(), song = c.songs[i], id = 'song' + i, sg = s.songs[id] || {}, wait = voiceFirst(id);
@@ -310,7 +347,7 @@ var L = (function () {
   }
   function html() {
     var name = cur(), si = songIndex(name);
-    var body = name === 'idea' ? ideaHtml() : name === 'demo' ? demoHtml() : si >= 0 ? songHtml(si) : name === 'ear' ? earHtml() : name === 'play' ? playHtml() : recapHtml();
+    var body = name === 'idea' ? ideaHtml() : name === 'demo' ? demoHtml() : si === 0 && ch().songsV2 ? song0Html() : si >= 0 ? songHtml(si) : name === 'ear' ? earHtml() : name === 'play' ? playHtml() : recapHtml();
     return '<div class="lesson">' + topHtml() + body + '</div>';
   }
   // Redraws the screen, except where a Spotify player is open: then only its buttons and Continue change.
@@ -318,7 +355,7 @@ var L = (function () {
     if (!s || state.view !== 'lesson') { return; }
     var si = songIndex(cur());
     if (si >= 0 && s.spotOpen === si) {
-      var ctl = document.getElementById('song-ctl'); if (ctl) { ctl.innerHTML = songCtlHtml(si); }
+      var ctl = document.getElementById('song-ctl'); if (ctl) { ctl.innerHTML = si === 0 && ch().songsV2 ? song0CtlHtml() : songCtlHtml(si); }
       var b = document.getElementById('lbottom'); if (b) { b.outerHTML = bottomHtml('Continue', canContinue(cur())); }
       return;
     }
@@ -332,9 +369,9 @@ var L = (function () {
     var c = ch(), name = cur();
     if (act === 'l-close') { stopAll(); s = null; go('path'); render(); }
     else if (act === 'l-speak') { try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {} speak(); }
-    else if (act === 'l-read') { s.read[name] = true; refresh(); }
+    else if (act === 'l-read') { if (s.voice !== 'idle') { Voice.stop(); s.voice = 'idle'; } s.read[name] = true; refresh(); }
     else if (act === 'l-next') { if (canContinue(name) && s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
-    else if (act === 'l-back') { if (s.i > 0) { goTo(s.i - 1); } } // the screen comes back as it was left (ear training starts over)
+    else if (act === 'l-back') { if (s.i > 0) { goTo(s.i - 1, true); } } // the screen comes back as it was left (ear training starts over)
     else if (act === 'l-skipscreen') { if (s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
     else if (act === 'l-demo') { stopAll(); c.demo(); s.demoPlayed = true; refresh(); }
     else if (act === 'l-groove') {
@@ -347,14 +384,14 @@ var L = (function () {
     else if (act === 'l-spot') {
       var pi = Number(el.getAttribute('data-i')), sp = c.songs[pi];
       stopAll();
-      s.songs['song' + pi].real = true; s.spotOpen = pi;
+      s.songs['song' + pi] = s.songs['song' + pi] || {}; s.songs['song' + pi].real = true; s.spotOpen = pi;
       refresh();
       var box = document.getElementById('spot-' + pi);
       Spotify.open(box, sp.spotifyId, function () {
         box.innerHTML = '<a class="spotify" href="' + sp.url + '" target="_blank" rel="noopener">Open the real song on Spotify ↗</a>';
       });
     }
-    else if (act === 'l-link') { var li = Number(el.getAttribute('data-i')); stopAll(); s.songs['song' + li].real = true; setTimeout(refresh, 300); return 'follow'; }
+    else if (act === 'l-link') { var li = Number(el.getAttribute('data-i')); stopAll(); s.songs['song' + li] = s.songs['song' + li] || {}; s.songs['song' + li].real = true; setTimeout(refresh, 300); return 'follow'; }
     else if (act === 'l-ask') { if (!s.picked) { ask(); } else { c.choose.play(s.q); } }
     else if (act === 'l-pick') {
       if (s.picked || !s.asked) { return; }
