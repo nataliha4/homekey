@@ -129,6 +129,22 @@ var L = (function () {
     refresh();
   }
 
+  /* Cady's short verdict after each answer ("Correct!", "Almost!" ...), picked at random but never the same twice
+     in a row. The chords replay only once she's done, so the two never overlap. Clips live in this folder. */
+  var VERDICT = {
+    good: [['voice-ear-correct-1.mp3', 'Correct!'], ['voice-ear-correct-2.mp3', 'Yes! That\'s it!'], ['voice-ear-correct-3.mp3', 'You got it!']],
+    bad: [['voice-ear-notquite-1.mp3', 'Not quite.'], ['voice-ear-notquite-2.mp3', 'Almost!'], ['voice-ear-notquite-3.mp3', 'Hmm, not this time.']]
+  };
+  var lastVerdict = null;
+  function verdictVoice(good, then) {
+    var list = VERDICT[good ? 'good' : 'bad'].filter(function (x) { return x[0] !== lastVerdict; });
+    var pickV = list[Math.floor(Math.random() * list.length)], round = s.round, done = false;
+    lastVerdict = pickV[0];
+    var go = function () { if (!done && s && s.round === round && s.picked) { done = true; then(); } };
+    Voice.play(pickV[0], pickV[1], function () {}, function () { timers.push(setTimeout(go, 150)); });
+    timers.push(setTimeout(go, 3000)); // in case the clip never reports its end
+  }
+
   /* ---------- Moving through the screens ---------- */
   function start(id) {
     stopAll();
@@ -437,7 +453,7 @@ var L = (function () {
       s.picked = el.getAttribute('data-q'); s.listening = false;
       s.results.push(s.picked === s.q.q);
       render();
-      c.choose.reveal(s.q);
+      if (c.earV2) { verdictVoice(s.picked === s.q.q, function () { c.choose.reveal(s.q); }); } else { c.choose.reveal(s.q); }
     }
     else if (act === 'l-round') {
       stopAll();
