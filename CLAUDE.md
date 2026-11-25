@@ -30,6 +30,7 @@ Read the backlog before starting work. When an item is done, move it to the Done
 ## HomeKey v2 (`next/`): where all work happens
 
 - The eighth-note character is **Cady** (short for Cadence, how music comes back home), a girl with a childlike voice. Use her name in texts and scripts; she introduces herself in the intro before 1a (see below).
+- Cady's ElevenLabs voice: "Kavya – Cute & Engaging Character", voice id `hpp4J3VqNfWAUOO0d1Us` (https://elevenlabs.io/app/speech-synthesis/text-to-speech?history_voice_id=hpp4J3VqNfWAUOO0d1Us). Use it for every Cady line.
 
 - One screen, one action: the action sits in the content (voice pill, play button, answer cards); a gray Continue at the bottom turns yellow once it's done. Top bar is just ✕ and a progress bar. Mockups: Design canvas "HomeKey lesson screens" (row "B, chosen · 1a in detail").
 - Files: `next/index.html` (page and all CSS), `next/app.js` (started as a copy of v1's app.js; now v2's own and changed freely), `next/lesson.js` (the new lesson design), `next/intro.js` (the "Meet Cady" intro, backlog #19). Check syntax with `node --check` on all three scripts. `next/index.html` loads them with `?v=<date>` (e.g. `app.js?v=2026-11-19b`): bump it on every deploy that changes a script, or phones (especially the installed app) keep the old scripts from their cache.
