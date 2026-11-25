@@ -222,10 +222,10 @@ var L = (function () {
     var song = ch().songs[0], sg = s.songs.song0 || {};
     if (hasSpot(song)) {
       if (s.spotOpen === 0) { return ''; }
-      return '<button type="button" class="btn lgroove' + (sg.real ? ' ready' : ' primary') + '" data-act="l-spot" data-i="0">' + ICON.phones + (sg.real ? 'Hear the real song again' : 'Hear the real song') + '</button>' +
+      return '<button type="button" class="btn lgroove' + (sg.real ? ' ready' : ' primary') + '" data-act="l-spot" data-i="0">' + ICON.phones + (sg.real ? 'Play it again' : 'Play the song') + '</button>' +
         '<div class="lnext">Plays from Spotify, right here</div>';
     }
-    return song.url ? '<a class="btn lgroove' + (sg.real ? ' ready' : ' primary') + '" data-act="l-link" data-i="0" href="' + song.url + '" target="_blank" rel="noopener">' + ICON.phones + 'Hear the real song on Spotify ↗</a>' : '';
+    return song.url ? '<a class="btn lgroove' + (sg.real ? ' ready' : ' primary') + '" data-act="l-link" data-i="0" href="' + song.url + '" target="_blank" rel="noopener">' + ICON.phones + 'Play the song on Spotify ↗</a>' : '';
   }
   function song0Html() {
     var c = ch(), song = c.songs[0], v = s.voice, done = !!s.heard.song0 || !!s.read.song0;

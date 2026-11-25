@@ -223,7 +223,15 @@ var Spotify = (function () {
           IFrameAPI.createController(box.firstChild, { uri: 'spotify:track:' + trackId, width: '100%', height: 80 }, function (ctl) {
             players.push(ctl);
             // When the real song starts, our own sounds stop, so the two never overlap.
-            try { ctl.addListener('playback_update', function (e) { if (e && e.data && e.data.isPaused === false) { stopOurs(); } }); } catch (e) {}
+            // Spotify sometimes resumes a track where it was last left (or a few seconds in): the first time it plays,
+            // jump back to the very beginning so the song is heard from its first note.
+            var rewound = false;
+            try { ctl.addListener('playback_update', function (e) {
+              if (e && e.data && e.data.isPaused === false) {
+                stopOurs();
+                if (!rewound) { rewound = true; if (e.data.position > 500) { try { ctl.seek(0); } catch (x) {} } }
+              }
+            }); } catch (e) {}
             try { ctl.play(); } catch (e) {}
           });
         } catch (e) { onFail(); }
@@ -776,7 +784,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-25b';
+var APP_VERSION = '2026-11-25c';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
