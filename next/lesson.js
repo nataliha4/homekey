@@ -10,9 +10,9 @@ var NEW_LESSON = { '1a': true };
 CONTENT.chapters['1a'].voiceV2 = 'voice-1a-idea-v2.mp3';
 
 // Songs, first screen (new design, Nov 25, 2026): no groove; Cady says her line, then the song card appears.
-// voice-1a-songs-v2.mp3 is still to be recorded in ElevenLabs; until then the browser's own voice reads the line.
+// Cady's line: voice-1a-songs-v2.mp3 (ElevenLabs, in this folder).
 CONTENT.chapters['1a'].songsV2 = {
-  intro: 'These songs stay home the whole way. Hear the real song, and listen for that settled feeling.',
+  intro: 'Songs that never leave home are rare, but they exist! Let\'s hear a few. Maybe you know some of them already.',
   voice: 'voice-1a-songs-v2.mp3'
 };
 
