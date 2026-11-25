@@ -232,7 +232,7 @@ body.in-lesson .app { padding-top: 8px; padding-bottom: 0; }
 .lx { flex: none; width: 44px; height: 44px; margin-left: -10px; border: 0; background: transparent; color: var(--muted); padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .lbar { flex: 1; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
 .lbar > div { height: 10px; border-radius: 5px; background: var(--accent); transition: width 0.5s ease; }
-h1.lh { font-size: 28px; }
+h1.lh { font-size: 28px; line-height: 1.2; }
 .lp, .lsub p { margin: 0; font-size: 16px; line-height: 1.5; color: var(--soft); }
 .lsub { display: flex; flex-direction: column; gap: 8px; }
 .lsub:empty { display: none; }
@@ -325,10 +325,11 @@ h1.lh { font-size: 28px; }
 .lskipslot { min-height: 36px; display: flex; justify-content: center; margin-top: 4px; }
 .lskip { min-height: 36px; padding: 6px 12px; font-size: 14px; }
 .lmid { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 36px; }
-.lstep { display: flex; align-items: center; gap: 6px; margin-bottom: -8px; }
-.lsteprow .lstep, .lsteprow { margin-bottom: -8px; }
-.lsteprow .lstep { margin-bottom: 0; }
-.lsongrow { margin-top: 10px; gap: 14px; }
+.lstep { display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: -4px; }
+.lsteprow .lstep, .lsteprow { margin-bottom: -4px; }
+.lsteprow { margin-top: 8px; }
+.lsteprow .lstep { margin: 0; }
+.lsongrow { margin-top: 18px; gap: 14px; }
 .lsubline { min-height: 6em; }
 .lappear { animation: appear 0.5s ease; }
 .llinkslot { min-height: 44px; display: flex; justify-content: center; }
@@ -393,8 +394,8 @@ h1.lh { font-size: 28px; }
   <div class="testtag">HomeKey v2 · test version</div>
   <main id="view" class="stack" style="gap: 20px"></main>
 </div>
-<script src="app.js?v=2026-11-25e"></script>
-<script src="lesson.js?v=2026-11-25e"></script>
-<script src="intro.js?v=2026-11-25e"></script>
+<script src="app.js?v=2026-11-25f"></script>
+<script src="lesson.js?v=2026-11-25f"></script>
+<script src="intro.js?v=2026-11-25f"></script>
 </body>
 </html>

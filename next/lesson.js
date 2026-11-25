@@ -19,6 +19,13 @@ CONTENT.chapters['1a'].songsV2 = [
   { headline: 'One last song', voice: 'voice-1a-song3-v2.mp3',
     intro: 'Here\'s something different: Inventions, by Maserati. No words, just guitar patterns that repeat over a steady, driving beat. And it stays home the whole time! Listen to how much can happen without ever leaving.' }
 ];
+// Ear training (new design, Nov 25, 2026): in round 1 Cady explains the game, then the play button and answers appear.
+// Her line voice-1a-ear-v2.mp3 is still to be recorded; until then the browser's own voice reads it.
+CONTENT.chapters['1a'].earV2 = {
+  prompt: 'Did the music stay home, or leave?', // shorter: Cady already says "you'll hear four chords"
+  intro: 'Now test your ear! You\'ll hear four chords. Did the music stay home, or did it leave? Tap your answer. There are ten rounds, so take your time.',
+  voice: 'voice-1a-ear-v2.mp3'
+};
 // The third song, v2 only (added Nov 25, 2026): an instrumental that never leaves its one home.
 CONTENT.chapters['1a'].songs.push({ title: 'Inventions', artist: 'Maserati', kind: 'Instrumental home',
   url: 'https://open.spotify.com/track/25WeY1hkgBRLjwl0R7JiB8', spotifyId: '25WeY1hkgBRLjwl0R7JiB8' });
@@ -61,6 +68,7 @@ var L = (function () {
     var v = name === 'idea' ? c.voice && { url: c.voiceV2 || c.voice.audio, local: !!c.voiceV2, words: (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain)).join(' ') }
       : v2Song(name) ? { url: v2Song(name).voice, local: true, words: v2Song(name).intro }
       : name === 'song0' ? c.listenVoice && { url: c.listenVoice.audio, words: c.listenIntro }
+      : name === 'ear' && c.earV2 ? (s.round === 1 && !s.picked) && { url: c.earV2.voice, local: true, words: c.earV2.intro }
       : name === 'ear' ? (hasGuide(c.choose) && s.round === 1 && !s.picked) && { url: c.choose.voice.audio, words: c.choose.intro }
       : name === 'recap' ? hasGuide(c.recapGuide) && { url: c.recapGuide.voice.audio, words: [c.recapGuide.intro].concat(c.recap).join(' ') }
       : null;
@@ -147,7 +155,7 @@ var L = (function () {
     // Without a voice guide, the first chords play as soon as the ear training opens.
     if (name === 'ear' && !voiceFor('ear')) { ask(); }
     // The new Songs screen is reached by tapping Continue, so Cady may start by herself (not when coming back).
-    if (v2Song(name) && !back && !s.heard[name] && voiceFor(name)) { speak(); }
+    if ((v2Song(name) || (name === 'ear' && ch().earV2)) && !back && !s.heard[name] && voiceFor(name)) { speak(); }
   }
   function canContinue(name) {
     var si = songIndex(name);
@@ -180,8 +188,9 @@ var L = (function () {
   }
   // A screen still waiting for its action shows a small "Skip" under the gray Continue (handy when testing,
   // and for anyone who'd rather not wait for the voice). Its slot keeps its height, so nothing jumps.
-  function bottomHtml(label, on, act, noSkip) {
-    var skip = act || noSkip ? '' : '<div class="lskipslot">' + (on ? '' : '<button type="button" class="llink lskip" data-act="l-skipscreen">Skip</button>') + '</div>';
+  function bottomHtml(label, on, act, noSkip, skipLink) {
+    var skip = skipLink ? '<div class="lskipslot">' + skipLink + '</div>'
+      : act || noSkip ? '' : '<div class="lskipslot">' + (on ? '' : '<button type="button" class="llink lskip" data-act="l-skipscreen">Skip</button>') + '</div>';
     return '<div class="lbottom" id="lbottom"><button type="button" class="lgo' + (on ? ' on' : '') + '" data-act="' + (act || 'l-next') + '"' + (on ? '' : ' aria-disabled="true"') + '>' + label + '</button>' + skip + '</div>';
   }
   /* The note on its couch, in the middle of the screen. The whole note is the button: before listening it bobs,
@@ -299,10 +308,23 @@ var L = (function () {
   function earHtml() {
     var c = ch(), picked = s.picked, waitVoice = voiceFor('ear') && voiceFirst('ear');
     var h = '<div class="spread lsteprow">' + stepLabel('ear') + dotsHtml(c.rounds, s.results, s.round) + '</div>';
-    h += '<h1 class="lh">' + esc(c.choose.prompt) + '</h1>';
-    if (voiceFor('ear')) {
+    h += '<h1 class="lh">' + esc(c.earV2 ? c.earV2.prompt : c.choose.prompt) + '</h1>';
+    if (c.earV2) {
+      // Round 1: small Cady explains the game; the play button and answers appear once she's done (or read).
+      var talk = s.round === 1 && !picked, v = s.voice, done = !!s.heard.ear || !!s.read.ear;
+      if (talk) {
+        var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : done ? 'heard' : 'idle';
+        h += '<div class="irow lsongrow"><button type="button" class="lnote ismall" data-act="l-speak" data-state="' + st + '" aria-label="' + (st === 'speaking' || st === 'loading' ? 'Stop Cady' : 'Hear Cady again') + '">' +
+          '<svg aria-hidden="true" viewBox="80 20 140 140">' + CADY + '</svg></button>' +
+          '<p class="lp lsubline" aria-live="polite">' + (v !== 'idle' || done ? esc(c.earV2.intro) : '') + '</p></div>';
+        h += '<div class="llinkslot">' + (done ? '' : '<button type="button" class="llink" data-act="l-read">Can’t play sound? Read it instead</button>') + '</div>';
+        if (!done) { return h + '<div class="grow"></div>' + bottomHtml('Continue', false, null, true, '<button type="button" class="llink lskip" data-act="l-skip">Skip the ear training</button>'); }
+      }
+      waitVoice = false;
+    } else if (voiceFor('ear')) {
       h += '<div class="lsub">' + (textShown('ear') ? '<p>' + esc(c.choose.intro) + '</p>' : '') + '</div><div class="lguide">' + pillHtml('ear') + '</div>';
     }
+    if (c.earV2) { h += '<div class="grow"></div>'; } // the game sits in the middle of the free space
     if (picked) {
       h += keyboardHtml();
     } else {
@@ -318,9 +340,11 @@ var L = (function () {
       h += '<button type="button" class="choice' + cls + '" data-act="l-pick" data-q="' + o.q + '">' + (o.icon ? '<span class="emo' + (o.iconWhite ? ' white' : '') + '" aria-hidden="true">' + o.icon + '</span>' : '') + '<b>' + esc(o.label) + '</b><span>' + esc(o.sub) + '</span></button>';
     });
     h += '</div>';
+    if (c.earV2) { h += '<div class="grow"></div>'; }
     if (!picked) {
-      h += '<button type="button" class="llink" data-act="l-skip">Skip the ear training</button>';
-      return h + bottomHtml('Continue', false, null, true); // has its own "Skip the ear training"
+      var skipEar = '<button type="button" class="llink' + (c.earV2 ? ' lskip' : '') + '" data-act="l-skip">Skip the ear training</button>';
+      if (c.earV2) { return h + bottomHtml('Continue', false, null, true, skipEar); }
+      return h + skipEar + bottomHtml('Continue', false, null, true); // has its own "Skip the ear training"
     }
     var good = picked === s.q.q, last = s.round >= c.rounds;
     var words = c.choose.verdict(s.q, good).replace(/^(Correct|Not quite): /, '');
