@@ -311,7 +311,8 @@ var L = (function () {
     h += '<h1 class="lh">' + esc(c.earV2 ? c.earV2.prompt : c.choose.prompt) + '</h1>';
     if (c.earV2) {
       // Round 1: small Cady explains the game; the play button and answers appear once she's done (or read).
-      var talk = s.round === 1 && !picked, v = s.voice, done = !!s.heard.ear || !!s.read.ear;
+      var v = s.voice, done = !!s.heard.ear || !!s.read.ear, talk = s.round === 1 && !done;
+      // Once she's done, the game takes her place: every round then has the same layout, and nothing jumps while playing.
       if (talk) {
         var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : done ? 'heard' : 'idle';
         h += '<div class="irow lsongrow"><button type="button" class="lnote ismall" data-act="l-speak" data-state="' + st + '" aria-label="' + (st === 'speaking' || st === 'loading' ? 'Stop Cady' : 'Hear Cady again') + '">' +
@@ -325,15 +326,19 @@ var L = (function () {
       h += '<div class="lsub">' + (textShown('ear') ? '<p>' + esc(c.choose.intro) + '</p>' : '') + '</div><div class="lguide">' + pillHtml('ear') + '</div>';
     }
     if (c.earV2) { h += '<div class="grow"></div>'; } // the game sits in the middle of the free space
+    // One fixed-height slot for the play button, the listening circle, the replay button and the keyboard,
+    // so the answer cards below never move when it changes.
+    h += '<div class="learslot">';
     if (picked) {
       h += keyboardHtml();
     } else {
       h += '<div class="lcenter">' + (s.listening
-        ? '<div class="lround listen" role="status" aria-label="Listening">' + ICON.bars + '</div>'
+        ? '<div class="lround listen" role="status" aria-label="Listening">' + ICON.bars + '</div><div class="lroundlbl">Listening…</div>'
         : !s.asked
           ? '<button type="button" class="lround' + (waitVoice ? '' : ' primary') + '" data-act="l-ask" aria-label="Play the chords">' + ICON.play + '</button><div class="lroundlbl' + (waitVoice ? '' : ' on') + '">Play the chords</div>'
-          : '<button type="button" class="llink strong" data-act="l-ask">' + ICON.again + esc(c.choose.replay) + '</button>') + '</div>';
+          : '<button type="button" class="lround" data-act="l-ask" aria-label="' + esc(c.choose.replay) + '">' + ICON.again + '</button><div class="lroundlbl">' + esc(c.choose.replay) + '</div>') + '</div>';
     }
+    h += '</div>';
     h += '<div class="choices' + (c.choose.options.length > 2 ? ' three' : '') + (s.asked && !s.listening && !picked ? ' go' : '') + '">';
     c.choose.options.forEach(function (o) {
       var cls = !picked ? '' : (s.q.q === o.q ? ' right' : (picked === o.q ? ' wrong' : ' dim'));
@@ -343,14 +348,15 @@ var L = (function () {
     if (c.earV2) { h += '<div class="grow"></div>'; }
     if (!picked) {
       var skipEar = '<button type="button" class="llink' + (c.earV2 ? ' lskip' : '') + '" data-act="l-skip">Skip the ear training</button>';
-      if (c.earV2) { return h + bottomHtml('Continue', false, null, true, skipEar); }
+      if (c.earV2) { return h + '<div class="learbottom">' + bottomHtml('Continue', false, null, true, skipEar) + '</div>'; }
       return h + skipEar + bottomHtml('Continue', false, null, true); // has its own "Skip the ear training"
     }
     var good = picked === s.q.q, last = s.round >= c.rounds;
     var words = c.choose.verdict(s.q, good).replace(/^(Correct|Not quite): /, '');
     words = words.charAt(0).toUpperCase() + words.slice(1);
+    if (c.earV2) { h += '<div class="learbottom">'; } // same height before and after answering, so nothing above moves
     return h + '<div class="lfeed ' + (good ? 'good' : 'bad') + '" id="lbottom" role="status"><div class="lfrow"><div class="lfic">' + (good ? ICON.check : ICON.cross) + '</div><div><div class="lft">' + (good ? 'Correct!' : 'Not quite') + '</div><div class="lfs">' + esc(words) + '</div></div></div>' +
-      '<button type="button" class="lgo on" data-act="l-round">' + (last ? 'Continue' : 'Next round' + ICON.arrow) + '</button></div>';
+      '<button type="button" class="lgo on" data-act="l-round">' + (last ? 'Continue' : 'Next round' + ICON.arrow) + '</button></div>' + (c.earV2 ? '</div>' : '');
   }
   function playHtml() {
     var p = ch().play2;
