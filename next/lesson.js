@@ -20,7 +20,7 @@ CONTENT.chapters['1a'].songsV2 = [
     intro: 'Here\'s something different: Inventions, by Maserati. No words, just guitar patterns that repeat over a steady, driving beat. And it stays home the whole time! Listen to how much can happen without ever leaving.' }
 ];
 // Ear training (new design, Nov 25, 2026): in round 1 Cady explains the game, then the play button and answers appear.
-// Her line voice-1a-ear-v2.mp3 is still to be recorded; until then the browser's own voice reads it.
+// Her line: voice-1a-ear-v2.mp3 (ElevenLabs, in this folder).
 CONTENT.chapters['1a'].earV2 = {
   prompt: 'Did the music stay home, or leave?', // shorter: Cady already says "you'll hear four chords"
   intro: 'Now test your ear! You\'ll hear four chords. Did the music stay home, or did it leave? Tap your answer. There are ten rounds, so take your time.',
