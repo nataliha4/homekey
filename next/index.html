@@ -199,7 +199,7 @@ button.guide svg { flex: none; max-width: 100%; height: auto; }
 /* The arrow rises from E toward E flat, holds, and fades: twice, then stays hidden. */
 @keyframes arrowshoot { 0% { opacity: 0; transform: translate(3.5%, 20%); } 40% { opacity: 1; transform: translate(0, 0); } 75% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(0, 0); } }
 .kb.lmoved .bk.lit[data-note="63"] { box-shadow: 0 0 0 3px rgba(245, 184, 65, 0.45), 0 0 14px 4px rgba(245, 184, 65, 0.45); }
-.lmovehand { position: absolute; z-index: 5; left: 25%; top: 62%; font-size: 34px; line-height: 1; transform: translateX(-50%); pointer-events: none; opacity: 0; filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.45)); animation: handslide 1.5s ease-in-out 2; }
+.lmovehand { position: absolute; z-index: 5; left: 25%; top: 62%; line-height: 0; transform: translateX(-50%); pointer-events: none; opacity: 0; filter: drop-shadow(0 0 1.2px #0F1724) drop-shadow(0 0 1.2px #0F1724) drop-shadow(0 2px 3px rgba(0, 0, 0, 0.4)); animation: handslide 1.5s ease-in-out 2; }
 /* The fingertip starts on E, slides up-left onto E flat, rests, then fades: twice. */
 @keyframes handslide { 0% { opacity: 0; left: 25%; top: 62%; } 15% { opacity: 1; left: 25%; top: 62%; } 60% { opacity: 1; left: 20%; top: 38%; } 85% { opacity: 1; left: 20%; top: 38%; } 100% { opacity: 0; left: 20%; top: 38%; } }
 .wk.was { outline: 2.5px dashed var(--warn); outline-offset: -6px; }
@@ -444,8 +444,8 @@ h1.lh { font-size: 28px; line-height: 1.2; }
   <div class="testtag">HomeKey v2 · test version</div>
   <main id="view" class="stack" style="gap: 20px"></main>
 </div>
-<script src="app.js?v=2026-11-26p"></script>
-<script src="lesson.js?v=2026-11-26p"></script>
-<script src="intro.js?v=2026-11-26p"></script>
+<script src="app.js?v=2026-11-26q"></script>
+<script src="lesson.js?v=2026-11-26q"></script>
+<script src="intro.js?v=2026-11-26q"></script>
 </body>
 </html>

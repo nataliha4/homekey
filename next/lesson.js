@@ -326,7 +326,7 @@ var L = (function () {
       var since = mv && s.movedAt ? Date.now() - s.movedAt : 1e9;
       var arrow = since >= 3000 ? '' : d.move.pointer === 'hand'
         // A pointing hand slides from E over to E flat, twice, then disappears.
-        ? '<span class="lmovehand" aria-hidden="true" style="animation-delay: -' + since + 'ms">\uD83D\uDC46</span>'
+        ? '<span class="lmovehand" aria-hidden="true" style="animation-delay: -' + since + 'ms"><svg viewBox="0 0 24 30" width="30" height="38"><g fill="#FF9A5C"><rect x="7.5" y="1" width="5.4" height="16" rx="2.7"></rect><rect x="5" y="12" width="15" height="15" rx="5.5"></rect><rect x="12" y="10.5" width="4.6" height="7" rx="2.3"></rect><rect x="15.6" y="11.5" width="4.4" height="7" rx="2.2"></rect><rect x="1.2" y="14.5" width="8" height="4.6" rx="2.3" transform="rotate(28 5 17)"></rect></g><g fill="none" stroke="#C9693A" stroke-width="0.9" stroke-linecap="round"><path d="M12.4 13.5 V16.5"></path><path d="M16.1 14 V17"></path></g></svg></span>'
         // The arrow (tried first, kept for now): rises from E toward E flat, twice, then fades.
         : since < 2800 ? '<svg class="lmovearrow" aria-hidden="true" style="animation-delay: -' + since + 'ms"><defs>' +
         '<marker id="lmah" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#FF9A5C" stroke="#0F1724" stroke-width="1.2"></path></marker></defs>' +
