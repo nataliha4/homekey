@@ -214,7 +214,8 @@ var Spotify = (function () {
   return {
     canEmbed: canEmbed,
     // Puts a compact player into the box. onFail runs if Spotify cannot be loaded.
-    open: function (box, trackId, onFail) {
+    // startAt (seconds, optional) skips a quiet intro: the track starts there instead of at 0:00.
+    open: function (box, trackId, onFail, startAt) {
       box.innerHTML = '<div class="small muted" style="text-align: center">Loading Spotify\u2026</div>';
       withApi(function (IFrameAPI) {
         if (!IFrameAPI) { onFail(); return; }
@@ -225,13 +226,14 @@ var Spotify = (function () {
             // When the real song starts, our own sounds stop, so the two never overlap.
             // Spotify sometimes resumes a track where it was last left (or a few seconds in): the first time it plays,
             // jump back to the very beginning so the song is heard from its first note.
-            var rewound = false;
+            var rewound = false, target = startAt || 0;
             try { ctl.addListener('playback_update', function (e) {
               if (e && e.data && e.data.isPaused === false) {
                 stopOurs();
-                if (!rewound) { rewound = true; if (e.data.position > 500) { try { ctl.seek(0); } catch (x) {} } }
+                if (!rewound) { rewound = true; if (Math.abs(e.data.position - target * 1000) > 1500) { try { ctl.seek(target); } catch (x) {} } }
               }
             }); } catch (e) {}
+            try { if (target) { ctl.loadUri('spotify:track:' + trackId, false, target); } } catch (e) {}
             try { ctl.play(); } catch (e) {}
           });
         } catch (e) { onFail(); }
@@ -784,7 +786,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-25j';
+var APP_VERSION = '2026-11-26a';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {

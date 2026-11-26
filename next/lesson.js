@@ -28,7 +28,8 @@ CONTENT.chapters['1a'].earV2 = {
 };
 // The third song, v2 only (added Nov 25, 2026): an instrumental that never leaves its one home.
 CONTENT.chapters['1a'].songs.push({ title: 'Inventions', artist: 'Maserati', kind: 'Instrumental home',
-  url: 'https://open.spotify.com/track/25WeY1hkgBRLjwl0R7JiB8', spotifyId: '25WeY1hkgBRLjwl0R7JiB8' });
+  url: 'https://open.spotify.com/track/25WeY1hkgBRLjwl0R7JiB8', spotifyId: '25WeY1hkgBRLjwl0R7JiB8',
+  startAt: 30 }); // the track opens with near silence: start where the music is clearly there
 
 CONTENT.chapters['1a'].play2 = {
   title: 'Your turn to play',
@@ -470,7 +471,7 @@ var L = (function () {
       var box = document.getElementById('spot-' + pi);
       Spotify.open(box, sp.spotifyId, function () {
         box.innerHTML = '<a class="spotify" href="' + sp.url + '" target="_blank" rel="noopener">Open the real song on Spotify ↗</a>';
-      });
+      }, sp.startAt);
     }
     else if (act === 'l-link') { var li = Number(el.getAttribute('data-i')); stopAll(); s.songs['song' + li] = s.songs['song' + li] || {}; s.songs['song' + li].real = true; setTimeout(refresh, 300); return 'follow'; }
     else if (act === 'l-ask') { if (!s.picked) { ask(); } else { c.choose.play(s.q); } }
