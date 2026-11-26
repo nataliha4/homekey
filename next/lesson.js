@@ -57,7 +57,7 @@ CONTENT.chapters['1a'].earV2 = {
     { headline: 'One more song', voice: 'voice-1b-song2-v2.mp3',
       intro: 'Next up: Get Up, Stand Up, by Bob Marley! The home here is sad, but listen to that beat. Sad doesn\'t have to mean slow!' },
     { headline: 'One last song', voice: 'voice-1b-song3-v2.mp3',
-      intro: 'Here\'s something unusual and beautiful: A l\'écoute du moro, by Constantinople and Ablaye Cissoko, with the kora, a harp instrument from Africa. Listen to the first minute. It stays in a sad home the whole time!' }];
+      intro: 'Here\'s something unusual and beautiful: A l\'écoute du moro, by Constantinople and Ablaye Cissoko, with the kora, a harp instrument from Africa. Listen to the first part. It stays in a sad home the whole time!' }];
   b.recap = ['Home can be major or minor.', 'Major sounds happy. Minor sounds sad.', 'Only one note differs between them: the middle one.'];
 })();
 
