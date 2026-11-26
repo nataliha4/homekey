@@ -793,7 +793,16 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-26w';
+var APP_VERSION = '2026-11-26x';
+/* "Share HomeKey": the phone's own share menu with just the link; where there is none (most desktops), copy the link. */
+var SHARE_URL = 'https://nataliha4.github.io/homekey/next/';
+function shareLink(btn) {
+  if (navigator.share) { navigator.share({ url: SHARE_URL }).catch(function () {}); return; }
+  var done = function (msg) { btn.textContent = msg; setTimeout(function () { btn.textContent = 'Share HomeKey'; }, 2000); };
+  if (navigator.clipboard) { navigator.clipboard.writeText(SHARE_URL).then(function () { done('Link copied!'); }, function () { done(SHARE_URL); }); }
+  else { done(SHARE_URL); }
+}
+
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
@@ -862,7 +871,7 @@ function pathHtml() {
     h += '<div class="reset-row">' + (state.askReset
       ? '<span class="small muted">Erase your progress on this device?</span><button type="button" class="btn quiet" id="reset-yes" data-act="reset-yes">Yes, erase it</button><button type="button" class="btn quiet" id="reset-no" data-act="reset-no">Keep it</button>'
       : '<button type="button" class="btn quiet" id="how" data-act="how">How it works</button><button type="button" class="btn quiet" id="reset-ask" data-act="reset-ask">Reset progress</button>') + '</div>';
-    h += '<div class="update-row"><button type="button" class="btn quiet" data-act="refresh">Check for updates</button><span class="small muted">Version ' + APP_VERSION + '</span></div>';
+    h += '<div class="update-row"><button type="button" class="btn quiet" data-act="share">Share HomeKey</button><button type="button" class="btn quiet" data-act="refresh">Check for updates</button><span class="small muted">Version ' + APP_VERSION + '</span></div>';
   }
   return h;
 }
@@ -1206,6 +1215,7 @@ view.addEventListener('click', function (e) {
   else if (act === 'start') { setWelcomed(true); go('path'); render(); }
   else if (act === 'intro') { Intro.start(); }
   else if (act === 'refresh') { hardRefresh(el); }
+  else if (act === 'share') { shareLink(el); }
   else if (act === 'open') { startChapter(el.getAttribute('data-id')); }
   else if (act === 'again') { startChapter(state.chapter); }
   else if (act === 'back') { go('path'); state.askReset = false; render(); }
