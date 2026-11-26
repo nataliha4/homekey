@@ -26,6 +26,13 @@ CONTENT.chapters['1a'].earV2 = {
   intro: 'Now test your ear! You\'ll hear four chords. Did the music stay home, or did it leave? Tap your answer. There are ten rounds, so take your time.',
   voice: 'voice-1a-ear-v2.mp3'
 };
+// Recap (new design, Nov 26, 2026): Cady cheers and reads the points; each lights up while she says it.
+// cues: when each point starts in voice-1a-recap-v2.mp3 (seconds); measure again if the line is re-recorded.
+CONTENT.chapters['1a'].recap2 = {
+  voice: 'voice-1a-recap-v2.mp3', line: 'Well done! Here\'s what to remember.',
+  intro: 'Well done! Here\'s what to remember. A song can stay on one chord, and that chord is home. Home is where the music feels at rest. And when the chord changes, the music has left home.',
+  cues: [3.0, 7.45, 10.4], cuesEnd: 13.9
+};
 // The third song, v2 only (added Nov 25, 2026): an instrumental that never leaves its one home.
 CONTENT.chapters['1a'].songs.push({ title: 'Inventions', artist: 'Maserati', kind: 'Instrumental home',
   url: 'https://open.spotify.com/track/25WeY1hkgBRLjwl0R7JiB8', spotifyId: '25WeY1hkgBRLjwl0R7JiB8',
@@ -76,6 +83,7 @@ var L = (function () {
       : name === 'play' && c.play2 && c.play2.voice ? { url: c.play2.voice, local: true, words: c.play2.intro }
       : name === 'ear' && c.earV2 ? (s.round === 1 && !s.picked) && { url: c.earV2.voice, local: true, words: c.earV2.intro }
       : name === 'ear' ? (hasGuide(c.choose) && s.round === 1 && !s.picked) && { url: c.choose.voice.audio, words: c.choose.intro }
+      : name === 'recap' && c.recap2 ? { url: c.recap2.voice, local: true, words: c.recap2.intro }
       : name === 'recap' ? hasGuide(c.recapGuide) && { url: c.recapGuide.voice.audio, words: [c.recapGuide.intro].concat(c.recap).join(' ') }
       : null;
     return v && (v.url || Voice.supported) ? v : null;
@@ -94,6 +102,7 @@ var L = (function () {
     var finish = function () { if (s && cur() === name && (s.voice === 'speaking' || s.voice === 'loading')) { voiceEnded(); } };
     timers.push(setTimeout(begin, 4000)); // some browsers never report the start
     if (v.url) { Voice.play((v.local ? '' : AUDIO_BASE) + v.url, v.words, begin, finish); } else { Voice.speak(v.words, begin, finish); }
+    if (name === 'recap' && ch().recap2) { followRecapCues(); }
   }
   // Heard, or stopped part way: either way the screen moves on to its next action.
   function voiceEnded() { s.voice = 'idle'; s.heard[cur()] = true; refresh(); }
@@ -177,7 +186,7 @@ var L = (function () {
     // Without a voice guide, the first chords play as soon as the ear training opens.
     if (name === 'ear' && !voiceFor('ear')) { ask(); }
     // The new Songs screen is reached by tapping Continue, so Cady may start by herself (not when coming back).
-    if ((v2Song(name) || (name === 'ear' && ch().earV2) || (name === 'play' && ch().play2.voice)) && !back && !s.heard[name] && voiceFor(name)) { speak(); }
+    if ((v2Song(name) || (name === 'ear' && ch().earV2) || (name === 'play' && ch().play2.voice) || (name === 'recap' && ch().recap2)) && !back && !s.heard[name] && voiceFor(name)) { speak(); }
   }
   function canContinue(name) {
     var si = songIndex(name);
@@ -197,13 +206,16 @@ var L = (function () {
     var h = '<div class="lsteps" role="img" aria-label="Step ' + (step + 1) + ' of 5: ' + STEP_LABEL[step][1] + '">';
     STEP_LABEL.forEach(function (x, k) {
       var fill = k < step ? 100 : k === step ? Math.round(frac * 100) : 0;
-      h += '<div class="lseg' + (k < step ? ' done' : k === step ? ' now' : '') + '"><div class="lsegfill" style="width: ' + fill + '%"></div><span aria-hidden="true">' + x[0] + '</span></div>';
+      var inner = '<div class="lsegfill" style="width: ' + fill + '%"></div><span aria-hidden="true">' + x[0] + '</span>';
+      // Finished steps can be tapped to go back to their first screen (this replaces the back arrow).
+      h += k < step
+        ? '<button type="button" class="lseg done" data-act="l-step" data-k="' + k + '" aria-label="Back to ' + x[1] + '">' + inner + '</button>'
+        : '<div class="lseg' + (k === step ? ' now' : '') + '">' + inner + '</div>';
     });
     return h + '</div>';
   }
   function topHtml() {
     return '<div class="ltop"><button type="button" class="lx" data-act="l-close" aria-label="Close lesson">' + ICON.close + '</button>' +
-      (s.i > 0 ? '<button type="button" class="lx lback" data-act="l-back" aria-label="Back to the previous screen">' + ICON.back + '</button>' : '') +
       stepsBarHtml() + '</div>';
   }
   function pillHtml(name, optional) {
@@ -428,7 +440,32 @@ var L = (function () {
     for (var k = 0; k < list.length - 1; k++) { if (list[k].id === s.id && CONTENT.chapters[list[k + 1].id]) { return list[k + 1]; } }
     return null;
   }
+  // While Cady reads the recap, the point she's on lights up, following the clip's own clock.
+  var cueTicker = null;
+  function followRecapCues() {
+    clearInterval(cueTicker);
+    var r = ch().recap2, lit = -1;
+    cueTicker = setInterval(function () {
+      if (!s || cur() !== 'recap') { clearInterval(cueTicker); return; }
+      var t = s.voice === 'speaking' ? Voice.clipTime() : -1, k = -1;
+      if (t >= 0 && t < r.cuesEnd) { r.cues.forEach(function (c0, j) { if (t >= c0) { k = j; } }); }
+      if (k !== lit) { lit = k; document.querySelectorAll('.lrpoint').forEach(function (el, j) { el.classList.toggle('on', j === k); }); }
+    }, 100);
+  }
+  function recap2Html() {
+    var c = ch(), r = c.recap2, n = nextChapter(), got = s.results.filter(Boolean).length, v = s.voice, done = !!s.heard.recap || !!s.read.recap;
+    var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : done ? 'heard' : 'idle';
+    var h = stepLabel('recap') + '<h1 class="lh">Chapter ' + esc(s.id) + ' done!</h1>';
+    if (s.results.length) { h += '<div class="spread lscore"><div class="lgot">You got ' + got + ' of ' + s.results.length + ' by ear.</div>' + dotsHtml(s.results.length, s.results, 0) + '</div>'; }
+    h += '<div class="irow lsongrow lrecaprow"><button type="button" class="lnote ismall" data-act="l-speak" data-state="' + st + '" aria-label="' + (st === 'speaking' || st === 'loading' ? 'Stop Cady' : 'Hear Cady again') + '">' +
+      '<svg aria-hidden="true" viewBox="80 20 140 140">' + CADY + '<path d="M140 108 L122 92" stroke="#F5B841" stroke-width="5" stroke-linecap="round"></path></svg></button>' +
+      '<p class="lp">' + esc(r.line) + '</p></div>';
+    h += '<div class="lcard lrecap"><div class="eyebrow">To remember</div>' + c.recap.map(function (p) { return '<div class="lrpoint"><span></span><div>' + esc(p) + '</div></div>'; }).join('') + '</div>';
+    h += '<div class="grow"></div><button type="button" class="llink" data-act="l-again">Do this chapter again</button>';
+    return h + (n ? bottomHtml('Next: ' + esc(n.id) + ', ' + esc(n.title), done, 'l-nextch') : bottomHtml('Back to your path', done, 'l-close'));
+  }
   function recapHtml() {
+    if (ch().recap2) { return recap2Html(); }
     var c = ch(), n = nextChapter(), got = s.results.filter(Boolean).length;
     var h = stepLabel('recap') + '<div class="lwin">' + ICON.cheer + '<div><h1 class="lh">Chapter ' + esc(s.id) + ' done!</h1>' +
       (s.results.length ? '<div class="lgot">You got ' + got + ' of ' + s.results.length + ' by ear.</div>' : '') + '</div></div>';
@@ -464,6 +501,10 @@ var L = (function () {
     else if (act === 'l-speak') { try { localStorage.setItem(HINT_KEY, '1'); } catch (e) {} speak(); }
     else if (act === 'l-read') { if (s.voice !== 'idle') { Voice.stop(); s.voice = 'idle'; } s.read[name] = true; refresh(); }
     else if (act === 'l-next') { if (canContinue(name) && s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
+    else if (act === 'l-step') {
+      var k = Number(el.getAttribute('data-k'));
+      for (var j = 0; j < s.list.length; j++) { if (stepOf(s.list[j]) === k) { goTo(j, true); break; } }
+    }
     else if (act === 'l-back') { if (s.i > 0) { goTo(s.i - 1, true); } } // the screen comes back as it was left (ear training starts over)
     else if (act === 'l-skipscreen') { if (s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
     else if (act === 'l-demo') { stopAll(); c.demo(); s.demoPlayed = true; refresh(); }
@@ -504,6 +545,7 @@ var L = (function () {
     }
     else if (act === 'l-skip') { goTo(s.list.indexOf('play')); }
     else if (act === 'l-again') { start(s.id); }
+    else if (act === 'l-nextch' && name === 'recap' && ch().recap2 && !(s.heard.recap || s.read.recap)) { return; }
     else if (act === 'l-nextch') { var nx = nextChapter(); s = null; if (nx) { startChapter(nx.id); } }
   }
 
