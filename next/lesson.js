@@ -189,11 +189,22 @@ var L = (function () {
   }
 
   /* ---------- Drawing ---------- */
+  /* The five steps as arrows (Nov 26, 2026): finished steps yellow, the current one filling up as you go
+     (by screen, or by round in ear training), the next ones dark with faded icons. */
+  function stepsBarHtml() {
+    var name = cur(), step = stepOf(name), same = s.list.filter(function (n) { return stepOf(n) === step; });
+    var frac = name === 'ear' ? (s.round - (s.picked ? 0 : 0.5)) / ch().rounds : name === 'recap' ? 1 : (same.indexOf(name) + 0.5) / same.length;
+    var h = '<div class="lsteps" role="img" aria-label="Step ' + (step + 1) + ' of 5: ' + STEP_LABEL[step][1] + '">';
+    STEP_LABEL.forEach(function (x, k) {
+      var fill = k < step ? 100 : k === step ? Math.round(frac * 100) : 0;
+      h += '<div class="lseg' + (k < step ? ' done' : k === step ? ' now' : '') + '"><div class="lsegfill" style="width: ' + fill + '%"></div><span aria-hidden="true">' + x[0] + '</span></div>';
+    });
+    return h + '</div>';
+  }
   function topHtml() {
-    var pct = Math.max(4, Math.round(s.i / (s.list.length - 1) * 100));
     return '<div class="ltop"><button type="button" class="lx" data-act="l-close" aria-label="Close lesson">' + ICON.close + '</button>' +
       (s.i > 0 ? '<button type="button" class="lx lback" data-act="l-back" aria-label="Back to the previous screen">' + ICON.back + '</button>' : '') +
-      '<div class="lbar" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div style="width: ' + pct + '%"></div></div></div>';
+      stepsBarHtml() + '</div>';
   }
   function pillHtml(name, optional) {
     if (!voiceFor(name)) { return ''; }
