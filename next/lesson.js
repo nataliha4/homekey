@@ -90,6 +90,14 @@ var L = (function () {
   };
 
   function ch() { return CONTENT.chapters[s.id]; }
+  // Fade something in only the first time it appears: the screen is redrawn on every voice change (start, end,
+  // replay), and replaying the fade made the text look like it reloaded.
+  // (A redraw during the fade continues it from where it was, via a negative delay, instead of starting over.)
+  function fadeOnce(key) {
+    s.seen = s.seen || {};
+    var now = Date.now(), t0 = s.seen[key] || (s.seen[key] = now), gone = now - t0;
+    return gone > 500 ? '' : ' fadein" style="animation-delay: -' + gone + 'ms';
+  }
   // The new-design entry for a song screen ('song0', 'song1', ...), if that song has one.
   function v2Song(name) { var c = ch(), si = songIndex(name); return si >= 0 && c.songsV2 && c.songsV2[si] || null; }
   function cur() { return s.list[s.i]; }
@@ -301,7 +309,7 @@ var L = (function () {
     h += '<div class="lstage"><button type="button" class="lnote" data-act="l-speak" data-state="' + st + '" aria-label="' + label + '">' +
       '<svg aria-hidden="true" viewBox="30 10 260 190">' + (c.mood === 'sad' ? SAD_SCENE : NOTE_SCENE) + '</svg></button>' +
       '<div class="lhint">' + (st === 'idle' ? 'Tap Cady' : '') + '</div></div>'; // shown every time she waits, as in the intro
-    h += '<div class="lsubs" aria-live="polite">' + (shown ? (c.explainV2 || c.explain).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') : '') + '</div>';
+    h += '<div class="lsubs' + (shown ? fadeOnce('subs-idea') : '') + '" aria-live="polite">' + (shown ? (c.explainV2 || c.explain).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') : '') + '</div>';
     h += '<div class="llinkslot">' + readLink('idea') + '</div>'; // a fixed slot, so nothing moves when the link goes away
     return h + bottomHtml('Continue', canContinue('idea'));
   }
@@ -341,7 +349,7 @@ var L = (function () {
     h += '<div class="llinkslot">' + (done ? '' : '<button type="button" class="llink" data-act="l-read">Can’t play sound? Read it instead</button>') + '</div>';
     h += '<div class="grow"></div>';
     if (done) {
-      h += '<div class="lcard lappear"><div class="lsong"><div class="lsongic">' + ICON.note + '</div><div><div class="lsongt">' + esc(song.title) + '</div><div class="lsongs">' + esc(song.artist) + ' · ' + esc(song.kind) + '</div></div></div>' +
+      h += '<div class="lcard' + fadeOnce('card-' + id) + '"><div class="lsong"><div class="lsongic">' + ICON.note + '</div><div><div class="lsongt">' + esc(song.title) + '</div><div class="lsongs">' + esc(song.artist) + ' · ' + esc(song.kind) + '</div></div></div>' +
         '<div class="lctl" id="song-ctl">' + songV2CtlHtml(i) + '</div><div class="spot lspot" id="spot-' + i + '"></div></div>'; // Cady says any note about the song
     }
     h += '<div class="grow"></div>';

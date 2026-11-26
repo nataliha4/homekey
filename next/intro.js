@@ -141,8 +141,9 @@ var Intro = (function () {
       return h + bottomHtml('Continue', canContinue());
     }
     if (sc.id === 'sound') {
+      if (s.answered.sound) { setTimeout(function () { if (s) { s.checkShown = true; } }, 0); } // its fade plays once, not on every redraw
       h += smallCady(esc(sc.words));
-      h += '<div class="grow"></div><div class="icheck" aria-live="polite">' + (s.answered.sound ? '<span>✓ ' + esc(sc.after.words) + '</span>' : '') + '</div>';
+      h += '<div class="grow"></div><div class="icheck" aria-live="polite">' + (s.answered.sound ? '<span' + (s.checkShown ? ' class="still"' : '') + '>✓ ' + esc(sc.after.words) + '</span>' : '') + '</div>';
       h += keyboardHtml();
       h += '<p class="lsmall">No sound? Check that your phone isn’t on silent.</p><div class="grow"></div>';
       return h + bottomHtml('Continue', canContinue());
