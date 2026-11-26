@@ -189,6 +189,12 @@ button.scene.talk { position: relative; }
 button.guide { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; width: 100%; box-sizing: border-box; text-align: left; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; padding: 10px 12px; cursor: pointer; font: inherit; color: inherit; line-height: 1.45; }
 button.guide svg { flex: none; max-width: 100%; height: auto; }
 /* Keyboard */
+.lmove { position: relative; height: 30px; }
+.lmove span { position: absolute; left: 12%; top: 2px; padding: 3px 10px; border-radius: 10px; background: var(--warn); color: var(--accent-ink); font-size: 12px; font-weight: 700; white-space: nowrap; animation: appear 0.4s ease; }
+.lmove span[hidden] { display: none; }
+.wk.was { outline: 2.5px dashed var(--warn); outline-offset: -6px; }
+.wk.was span { visibility: visible; color: #7D8BA3; }
+.kb.lmoved .bk.lit[data-note="63"]::after { content: 'E\266D'; position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-ink); }
 .kb-caption { min-height: 18px; font-size: 13px; font-weight: 700; color: var(--muted); }
 .kb { position: relative; display: flex; height: 150px; border-radius: 0 0 10px 10px; overflow: hidden; }
 .wk { flex: 1; height: 150px; border: 0; border-right: 2px solid var(--bg); border-radius: 0 0 8px 8px; background: var(--ivory); color: var(--accent-ink); padding: 0 0 8px; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; font-size: 12px; font-weight: 700; }
@@ -425,8 +431,8 @@ h1.lh { font-size: 28px; line-height: 1.2; }
   <div class="testtag">HomeKey v2 · test version</div>
   <main id="view" class="stack" style="gap: 20px"></main>
 </div>
-<script src="app.js?v=2026-11-26l"></script>
-<script src="lesson.js?v=2026-11-26l"></script>
-<script src="intro.js?v=2026-11-26l"></script>
+<script src="app.js?v=2026-11-26m"></script>
+<script src="lesson.js?v=2026-11-26m"></script>
+<script src="intro.js?v=2026-11-26m"></script>
 </body>
 </html>

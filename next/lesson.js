@@ -37,7 +37,10 @@ CONTENT.chapters['1a'].earV2 = {
   b.headlineV2 = 'Home can feel sad, too.';
   b.voiceV2 = 'voice-1b-idea-v2.mp3';
   b.explainV2 = ['Home can feel happy or sad! A happy home is called major. A sad home is called minor. And here\'s the surprise: only one note is different. The middle one!'];
-  b.demoV2 = { title: 'Hear happy, then sad', sub: 'Tap play and watch the middle note.', label: 'Play happy, then sad', lit: [], caption: '' };
+  b.demoV2 = { title: 'Hear happy, then sad', sub: 'Tap play and watch the middle note.', label: 'Play happy, then sad', lit: [], caption: '',
+    // after the first chord, the middle note visibly steps down: E keeps a dashed outline, a tag names the change
+    move: { from: 64, to: 63, at: 1.6, tag: 'E \u2192 E\u266D: one note down' } };
+  b.demo = function () { playBeats([{ notes: C_MAJOR.notes, bass: 48, caption: 'Happy: C major (C, E, G)' }, { notes: C_MINOR.notes, bass: 48, caption: 'Sad: C minor (C, E\u266D, G)' }], 1.6, 'block'); };
   b.choose.prompt = 'Listen to the chord. Is it happy or sad?';
   b.choose.options = [{ q: 'major', icon: '😊', label: 'Happy', sub: 'major' }, { q: 'minor', icon: '😢', label: 'Sad', sub: 'minor' }];
   b.play2 = { title: 'Your turn to play', text: 'Start from C major (C, E, G), then lower the middle note to the black key on its left. That\'s C minor, a sad home. Start the groove and play C minor along with it.',
@@ -307,7 +310,14 @@ var L = (function () {
     var h = stepLabel('demo') + '<h1 class="lh">' + esc(d.title) + '</h1><p class="lp">' + esc(d.sub) + '</p>';
     h += '<div class="lmid"><div class="lcenter"><button type="button" class="lround' + (s.demoPlayed ? '' : ' primary') + '" data-act="l-demo" aria-label="' + (s.demoPlayed ? 'Play it again' : esc(d.label)) + '">' + (s.demoPlayed ? ICON.again : ICON.play) + '</button>' +
       '<div class="lroundlbl' + (s.demoPlayed ? '' : ' on') + '">' + (s.demoPlayed ? 'Play it again' : esc(d.label)) + '</div></div>';
-    h += keyboardHtml() + '</div>'; // play button and keys together, centered in the space above Continue
+    var kb = keyboardHtml();
+    if (d.move) {
+      // A fixed slot for the tag above the keys (empty until the note has moved), so nothing jumps.
+      var mv = s.demoMoved;
+      kb = kb.replace('<div class="kb">', '<div class="lmove"><span' + (mv ? '' : ' hidden') + '>' + esc(d.move.tag) + '</span></div><div class="kb' + (mv ? ' lmoved' : '') + '">');
+      if (mv) { kb = kb.replace('class="wk" data-note="' + d.move.from + '"', 'class="wk was" data-note="' + d.move.from + '"').replace('class="wk lit" data-note="' + d.move.from + '"', 'class="wk was" data-note="' + d.move.from + '"'); }
+    }
+    h += kb + '</div>'; // play button and keys together, centered in the space above Continue
     return h + bottomHtml('Continue', canContinue('demo'));
   }
   // New first Songs screen: only the real song (the card appears once Cady is done, stopped, or read).
@@ -536,7 +546,11 @@ var L = (function () {
     }
     else if (act === 'l-back') { if (s.i > 0) { goTo(s.i - 1, true); } } // the screen comes back as it was left (ear training starts over)
     else if (act === 'l-skipscreen') { if (s.i < s.list.length - 1) { if (name === 'play') { Progress.complete(s.id); } goTo(s.i + 1); } }
-    else if (act === 'l-demo') { stopAll(); c.demo(); s.demoPlayed = true; refresh(); }
+    else if (act === 'l-demo') {
+      stopAll(); c.demo(); s.demoPlayed = true; s.demoMoved = false; refresh();
+      var mvd = c.demoV2 && c.demoV2.move;
+      if (mvd) { timers.push(setTimeout(function () { if (s && cur() === 'demo') { s.demoMoved = true; refresh(); } }, mvd.at * 1000 + 60)); }
+    }
     else if (act === 'l-groove') {
       var gi = el.getAttribute('data-i'), gid = gi === 'play' ? 'play' : 'song' + gi;
       if (s.groove === gid) { stopAll(); if (gid !== 'play') { light([], ''); } refresh(); return; }
