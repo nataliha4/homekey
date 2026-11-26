@@ -8,6 +8,7 @@ HomeKey is a small web app that teaches music harmony by ear, built by Natalie (
 
 - Product brief, with the full learning path: https://claude.ai/code/artifact/1c3d3b6d-7d49-4386-9631-64d3a33aff98
 - Backlog of feedback and ideas, numbered items with status: https://claude.ai/code/artifact/1556af23-53d1-4b0e-8ec8-2d259f1d3301
+- Song library (Claude Sheets, started Nov 26, 2026): every song in the app, placeholders, and song ideas parked for later lessons, with lesson, major/minor, status and notes: https://claude.ai/artifact/LHLL6tiimw2FED8BsSZJaM. Add new songs there, and park song ideas there instead of the backlog.
 
 Read the backlog before starting work. When an item is done, move it to the Done table with a line on what changed.
 
