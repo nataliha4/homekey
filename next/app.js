@@ -232,9 +232,12 @@ var Spotify = (function () {
                 stopOurs();
                 // Only full tracks can jump: someone not logged in to Spotify (often on a phone) gets a short
                 // preview instead, and jumping past its end would leave the player silent.
+                // (Spotify's seek() doesn't move the embed; reloading the track with a start time does.)
                 if (!rewound && e.data.duration) {
                   rewound = true;
-                  if (e.data.duration > 60000 && Math.abs(e.data.position - target * 1000) > 1500) { try { ctl.seek(target); } catch (x) {} }
+                  if (target && e.data.duration > 60000 && e.data.position < target * 1000 - 1500) {
+                    try { ctl.loadUri('spotify:track:' + trackId, false, target); setTimeout(function () { try { ctl.play(); } catch (x) {} }, 400); } catch (x) {}
+                  }
                 }
               }
             }); } catch (e) {}
@@ -790,7 +793,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-26b';
+var APP_VERSION = '2026-11-26c';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
