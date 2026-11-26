@@ -45,6 +45,14 @@ CONTENT.chapters['1a'].earV2 = {
   b.choose.options = [{ q: 'major', icon: '😊', label: 'Happy', sub: 'major' }, { q: 'minor', icon: '😢', label: 'Sad', sub: 'minor' }];
   b.play2 = { title: 'Your turn to play', text: 'Start from C major (C, E, G), then lower the middle note to the black key on its left. That\'s C minor, a sad home. Start the groove and play C minor along with it.',
     tips: [], caption: 'C minor: C, E flat, G', lit: C_MINOR.notes, endHere: false, beats: repeat(C_MINOR, 12), beatDur: 0.75 };
+  // Songs: at least three per lesson (Natalie, Nov 26, 2026). Song 1 (Carol of the Bells) is still interim (old
+  // design, with groove); song 2 is in the new design (no groove). Song 3: still to be chosen.
+  b.songs.push({ title: 'Get Up, Stand Up', artist: 'Bob Marley & The Wailers', kind: 'Minor home',
+    url: 'https://open.spotify.com/track/2Mw8xQJpIDAgrktDXEqxCs', spotifyId: '2Mw8xQJpIDAgrktDXEqxCs',
+    startAt: 9 }); // skip the opening bars, where the bass moves around before it settles on home
+  b.songsV2 = [null,
+    { headline: 'One more song', voice: 'voice-1b-song2-v2.mp3',
+      intro: 'Next up: Get Up, Stand Up, by Bob Marley! The home here is sad, but strong, too. Listen to how the song keeps coming back to it.' }];
   b.recap = ['Home can be major or minor.', 'Major sounds happy. Minor sounds sad.', 'Only one note differs between them: the middle one.'];
 })();
 
