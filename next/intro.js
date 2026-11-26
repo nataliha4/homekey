@@ -124,7 +124,7 @@ var Intro = (function () {
   function topHtml() {
     var pct = [4, 25, 50, 75, 100][s.i];
     return '<div class="ltop"><button type="button" class="lx" data-act="i-close" aria-label="Close the intro"><svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6 L18 18 M18 6 L6 18"></path></svg></button>' +
-      (s.i > 0 ? '<button type="button" class="lx lback" data-act="i-back" aria-label="Back to the previous screen">' + '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12 H5 M11 6 L5 12 L11 18"></path></svg>' + '</button>' : '<span class="lx lback" aria-hidden="true"></span>')  // keeps the bar in place on screen 1 +
+      (s.i > 0 ? '<button type="button" class="lx lback" data-act="i-back" aria-label="Back to the previous screen">' + '<svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12 H5 M11 6 L5 12 L11 18"></path></svg>' + '</button>' : '<span class="lx lback" aria-hidden="true"></span>') + // the empty slot keeps the bar in place on screen 1
       '<div class="lbar" role="progressbar" aria-label="Intro progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + pct + '"><div style="width: ' + pct + '%"></div></div></div>';
   }
   function bottomHtml(label, on, act) {
