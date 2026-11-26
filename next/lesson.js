@@ -54,7 +54,7 @@ CONTENT.chapters['1a'].earV2 = {
     { headline: 'Hear it in a song', voice: 'voice-1b-song1-v2.mp3',
       intro: 'Let\'s hear a sad home in real songs! First: Carol of the Bells. Four little notes circle round and round, like bells ringing in the cold. Can you hear how the home feels sad?' },
     { headline: 'One more song', voice: 'voice-1b-song2-v2.mp3',
-      intro: 'Next up: Get Up, Stand Up, by Bob Marley! The home here is sad, but strong, too. Listen to how the song keeps coming back to it.' }];
+      intro: 'Next up: Get Up, Stand Up, by Bob Marley! The home here is sad, but listen to that beat. Sad doesn\'t have to mean slow!' }];
   b.recap = ['Home can be major or minor.', 'Major sounds happy. Minor sounds sad.', 'Only one note differs between them: the middle one.'];
 })();
 
