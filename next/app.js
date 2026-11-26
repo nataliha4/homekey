@@ -793,7 +793,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-26g';
+var APP_VERSION = '2026-11-26h';
 /* "Check for updates": asks the server for fresh copies of the page and its scripts, skipping the phone's cache,
    then reloads. Needed mostly in the installed app, which has no refresh button. */
 function hardRefresh(btn) {
@@ -803,6 +803,9 @@ function hardRefresh(btn) {
   try { Promise.all(files.map(function (f) { return fetch(f, { cache: 'reload' }).catch(function () {}); })).then(go, go); } catch (e) { go(); }
   setTimeout(go, 5000);
 }
+
+/* The teal check badge for finished things (chapters on the path, the Meet Cady card). */
+var DONE_BADGE = '<span class="icheck-badge" aria-hidden="true"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0F1724" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12 L10 17 L19 7"></path></svg></span>';
 
 /* Path screen */
 function pathHtml() {
@@ -839,8 +842,8 @@ function pathHtml() {
       ? 'left: 0; right: calc(' + (100 - xs[i]) + '% + 14px); text-align: right; top: ' + (top + 12) + 'px'
       : 'left: calc(' + xs[i] + '% + 82px); right: 0; top: ' + (top + 10) + 'px';
     if (isDone || open) {
-      h += '<button type="button" class="node ' + (isDone ? 'done' : 'current') + (!isDone && i === 0 && typeof Intro !== 'undefined' && !Intro.isDone() ? ' waiting' : '') + '" data-act="open" data-id="' + c.id + '" style="' + pos + '" aria-label="Open chapter ' + c.id + ', ' + esc(c.title) + '">' + c.id + '</button>';
-      h += '<button type="button" tabindex="-1" aria-hidden="true" class="node-label live' + (isDone ? ' done' : '') + '" data-act="open" data-id="' + c.id + '" style="' + labelPos + '"><span class="t">' + esc(c.title) + '</span><span class="s">' + (isDone ? 'Done · replay' : (i === 0 ? (typeof Intro === 'undefined' ? 'Start here' : Intro.isDone() ? 'Next up' : 'Next up, after meeting Cady') : 'Next up')) + '</span></button>';
+      h += '<button type="button" class="node ' + (isDone ? 'done' : 'current') + (!isDone && i === 0 && typeof Intro !== 'undefined' && !Intro.isDone() ? ' waiting' : '') + '" data-act="open" data-id="' + c.id + '" style="' + pos + '" aria-label="Open chapter ' + c.id + ', ' + esc(c.title) + (isDone ? ', done' : '') + '">' + c.id + (isDone ? DONE_BADGE : '') + '</button>';
+      h += '<button type="button" tabindex="-1" aria-hidden="true" class="node-label live' + (isDone ? ' done' : '') + '" data-act="open" data-id="' + c.id + '" style="' + labelPos + '"><span class="t">' + esc(c.title) + '</span><span class="s">' + (isDone ? '✓ Done · replay' : (i === 0 ? (typeof Intro === 'undefined' ? 'Start here' : Intro.isDone() ? 'Next up' : 'Next up, after meeting Cady') : 'Next up')) + '</span></button>';
     } else {
       h += '<div class="node" style="' + pos + '">' + c.id + '</div>';
       h += '<div class="node-label" style="' + labelPos + '"><div class="t">' + esc(c.title) + '</div><div class="s">' + esc(c.sub) + '</div></div>';
