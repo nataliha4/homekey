@@ -192,6 +192,13 @@ button.guide svg { flex: none; max-width: 100%; height: auto; }
 .lmove { position: relative; height: 30px; }
 .lmove span { position: absolute; left: 12%; top: 2px; padding: 3px 10px; border-radius: 10px; background: var(--warn); color: var(--accent-ink); font-size: 12px; font-weight: 700; white-space: nowrap; animation: appear 0.4s ease; }
 .lmove span[hidden] { display: none; }
+.lmovearrow { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; overflow: visible; pointer-events: none; opacity: 0; animation: arrowshoot 1.4s ease-out 2; }
+.lmovearrow line { stroke-linecap: round; }
+.lmovearrow .sh { stroke: var(--bg); stroke-width: 10px; }
+.lmovearrow .ar { stroke: var(--warn); stroke-width: 5.5px; }
+/* The arrow rises from E toward E flat, holds, and fades: twice, then stays hidden. */
+@keyframes arrowshoot { 0% { opacity: 0; transform: translate(3.5%, 20%); } 40% { opacity: 1; transform: translate(0, 0); } 75% { opacity: 1; transform: translate(0, 0); } 100% { opacity: 0; transform: translate(0, 0); } }
+.kb.lmoved .bk.lit[data-note="63"] { box-shadow: 0 0 0 3px rgba(245, 184, 65, 0.45), 0 0 14px 4px rgba(245, 184, 65, 0.45); }
 .wk.was { outline: 2.5px dashed var(--warn); outline-offset: -6px; }
 .wk.was span { visibility: visible; color: #7D8BA3; }
 .kb.lmoved .bk.lit[data-note="63"]::after { content: 'E\266D'; position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-size: 11px; font-weight: 700; color: var(--accent-ink); }
@@ -434,8 +441,8 @@ h1.lh { font-size: 28px; line-height: 1.2; }
   <div class="testtag">HomeKey v2 · test version</div>
   <main id="view" class="stack" style="gap: 20px"></main>
 </div>
-<script src="app.js?v=2026-11-26n"></script>
-<script src="lesson.js?v=2026-11-26n"></script>
-<script src="intro.js?v=2026-11-26n"></script>
+<script src="app.js?v=2026-11-26o"></script>
+<script src="lesson.js?v=2026-11-26o"></script>
+<script src="intro.js?v=2026-11-26o"></script>
 </body>
 </html>

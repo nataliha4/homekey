@@ -39,7 +39,7 @@ CONTENT.chapters['1a'].earV2 = {
   b.explainV2 = ['Home can feel happy or sad! A happy home is called major. A sad home is called minor. And here\'s the surprise: only one note is different. The middle one!'];
   b.demoV2 = { title: 'Hear happy, then sad', sub: 'Tap play and watch the middle note.', label: 'Play happy, then sad', lit: [], caption: '',
     // after the first chord, the middle note visibly steps down: E keeps a dashed outline, a tag names the change
-    move: { from: 64, to: 63, at: 1.6, tag: 'E \u2192 E\u266D: one note down' } };
+    move: { from: 64, to: 63, at: 1.6, tag: 'One note down' } };
   b.demo = function () { playBeats([{ notes: C_MAJOR.notes, bass: 48, caption: 'Happy: C major (C, E, G)' }, { notes: C_MINOR.notes, bass: 48, caption: 'Sad: C minor (C, E\u266D, G)' }], 1.6, 'block'); };
   b.choose.prompt = 'Listen to the chord. Is it happy or sad?';
   b.choose.options = [{ q: 'major', icon: '😊', label: 'Happy', sub: 'major' }, { q: 'minor', icon: '😢', label: 'Sad', sub: 'minor' }];
@@ -322,7 +322,13 @@ var L = (function () {
     if (d.move) {
       // A fixed slot for the tag above the keys (empty until the note has moved), so nothing jumps.
       var mv = s.demoMoved;
-      kb = kb.replace('<div class="kb">', '<div class="lmove"><span' + (mv ? '' : ' hidden') + '>' + esc(d.move.tag) + '</span></div><div class="kb' + (mv ? ' lmoved' : '') + '">');
+      // Right after the move, a straight arrow shoots from E up to E flat, twice, then fades away.
+      var since = mv && s.movedAt ? Date.now() - s.movedAt : 1e9;
+      var arrow = since < 2800 ? '<svg class="lmovearrow" aria-hidden="true" style="animation-delay: -' + since + 'ms"><defs>' +
+        '<marker id="lmah" viewBox="0 0 10 10" refX="3" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#FF9A5C" stroke="#0F1724" stroke-width="1.2"></path></marker></defs>' +
+        '<line class="sh" x1="28.5%" y1="84%" x2="21.6%" y2="46%"></line>' +
+        '<line class="ar" x1="28.5%" y1="84%" x2="21.6%" y2="46%" marker-end="url(#lmah)"></line></svg>' : '';
+      kb = kb.replace('<div class="kb">', '<div class="lmove"><span' + (mv ? '' : ' hidden') + '>' + esc(d.move.tag) + '</span></div><div class="kb' + (mv ? ' lmoved' : '') + '">' + arrow);
       if (mv) { kb = kb.replace('class="wk" data-note="' + d.move.from + '"', 'class="wk was" data-note="' + d.move.from + '"').replace('class="wk lit" data-note="' + d.move.from + '"', 'class="wk was" data-note="' + d.move.from + '"'); }
     }
     h += kb + '</div>'; // play button and keys together, centered in the space above Continue
@@ -557,7 +563,7 @@ var L = (function () {
     else if (act === 'l-demo') {
       stopAll(); c.demo(); s.demoPlayed = true; s.demoMoved = false; refresh();
       var mvd = c.demoV2 && c.demoV2.move;
-      if (mvd) { timers.push(setTimeout(function () { if (s && cur() === 'demo') { s.demoMoved = true; refresh(); } }, mvd.at * 1000 + 60)); }
+      if (mvd) { timers.push(setTimeout(function () { if (s && cur() === 'demo') { s.demoMoved = true; s.movedAt = Date.now(); refresh(); } }, mvd.at * 1000 + 60)); }
     }
     else if (act === 'l-groove') {
       var gi = el.getAttribute('data-i'), gid = gi === 'play' ? 'play' : 'song' + gi;
