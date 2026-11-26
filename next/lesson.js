@@ -3,7 +3,7 @@
    Continue waits at the bottom in gray and turns yellow once that action is done. Designs: "HomeKey lesson screens".
    Loaded after app.js and reuses its Sound, Voice, Spotify, Progress, keyboard and content. */
 var AUDIO_BASE = '../'; // the recordings live in the main folder, one level up
-var NEW_LESSON = { '1a': true };
+var NEW_LESSON = { '1a': true, '1b': true };
 
 // Play step text for the new design (the old recording, voice-1a-play.mp3, no longer matches it).
 // v2 voices that live in this folder (not the main one), e.g. the ElevenLabs stand-in for the 1a Idea (backlog #13).
@@ -26,6 +26,25 @@ CONTENT.chapters['1a'].earV2 = {
   intro: 'Now test your ear! You\'ll hear four chords. Did the music stay home, or did it leave? Tap your answer. There are ten rounds, so take your time.',
   voice: 'voice-1a-ear-v2.mp3'
 };
+/* ---------- 1b in the new design (started Nov 26, 2026; screen by screen) ----------
+   One pair of words everywhere: happy and sad (backlog #4). Done so far: the Idea screen (sad Cady under a
+   moon, her line voice-1b-idea-v2.mp3). The other screens are interim: the old content in the new frame. */
+(function () {
+  var b = CONTENT.chapters['1b'];
+  b.title = 'Happy home, sad home';
+  CONTENT.section1.chapters.forEach(function (x) { if (x.id === '1b') { x.title = 'Happy home, sad home'; } });
+  b.mood = 'sad';
+  b.headlineV2 = 'Home can feel sad, too.';
+  b.voiceV2 = 'voice-1b-idea-v2.mp3';
+  b.explainV2 = ['Home can feel happy or sad! A happy home is called major. A sad home is called minor. And here\'s the surprise: only one note is different. The middle one!'];
+  b.demoV2 = { title: 'Hear happy, then sad', sub: 'Tap play and watch the middle note.', label: 'Play happy, then sad', lit: [], caption: '' };
+  b.choose.prompt = 'Listen to the chord. Is it happy or sad?';
+  b.choose.options = [{ q: 'major', icon: '😊', label: 'Happy', sub: 'major' }, { q: 'minor', icon: '😢', label: 'Sad', sub: 'minor' }];
+  b.play2 = { title: 'Your turn to play', text: 'Start from C major (C, E, G), then lower the middle note to the black key on its left. That\'s C minor, a sad home. Start the groove and play C minor along with it.',
+    tips: [], caption: 'C minor: C, E flat, G', lit: C_MINOR.notes, endHere: false, beats: repeat(C_MINOR, 12), beatDur: 0.75 };
+  b.recap = ['Home can be major or minor.', 'Major sounds happy. Minor sounds sad.', 'Only one note differs between them: the middle one.'];
+})();
+
 // Recap (new design, Nov 26, 2026): Cady cheers and reads the points; each lights up while she says it.
 // cues: when each point starts in voice-1a-recap-v2.mp3 (seconds); measure again if the line is re-recorded.
 CONTENT.chapters['1a'].recap2 = {
@@ -77,7 +96,7 @@ var L = (function () {
   /* ---------- Voice: the note reads the screen's text aloud ---------- */
   function voiceFor(name) {
     var c = ch();
-    var v = name === 'idea' ? c.voice && { url: c.voiceV2 || c.voice.audio, local: !!c.voiceV2, words: (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain)).join(' ') }
+    var v = name === 'idea' ? c.voice && { url: c.voiceV2 || c.voice.audio, local: !!c.voiceV2, words: (c.explainV2 || (c.voice.skipHeadline ? c.explain : [c.headline].concat(c.explain))).join(' ') }
       : v2Song(name) ? { url: v2Song(name).voice, local: true, words: v2Song(name).intro }
       : name === 'song0' ? c.listenVoice && { url: c.listenVoice.audio, words: c.listenIntro }
       : name === 'play' && c.play2 && c.play2.voice ? { url: c.play2.voice, local: true, words: c.play2.intro }
@@ -115,7 +134,7 @@ var L = (function () {
     refresh();
   }
   function grooveHeard(id) {
-    if (id === 'play') { s.playGroove = true; ch().play.ready(); light(C_MAJOR.notes, ch().play2.caption); }
+    if (id === 'play') { s.playGroove = true; ch().play.ready(); light(ch().play2.lit || C_MAJOR.notes, ch().play2.caption); }
     else { s.songs[id] = s.songs[id] || {}; s.songs[id].groove = true; }
   }
   // Called by app.js when all sounds stop: a playing groove counts as heard.
@@ -178,9 +197,9 @@ var L = (function () {
     var name = cur();
     Progress.reach(s.id, stepOf(name));
     state.lit = []; state.caption = '';
-    if (name === 'demo') { state.lit = C_MAJOR.notes; state.caption = 'Home: C major (C, E, G)'; }
+    if (name === 'demo') { var dv = ch().demoV2; state.lit = dv ? dv.lit : C_MAJOR.notes; state.caption = dv ? dv.caption : 'Home: C major (C, E, G)'; }
     if (name === 'ear') { setupEar(); }
-    if (name === 'play' && !ch().play2.voice) { state.lit = C_MAJOR.notes; state.caption = ch().play2.caption; }
+    if (name === 'play' && !ch().play2.voice) { state.lit = ch().play2.lit || C_MAJOR.notes; state.caption = ch().play2.caption; }
     render();
     window.scrollTo(0, 0);
     // Without a voice guide, the first chords play as soon as the ear training opens.
@@ -254,6 +273,15 @@ var L = (function () {
     '<g class="nbars"><rect x="100" y="41" width="4" height="8" rx="2"></rect><rect x="108" y="35" width="4" height="20" rx="2"></rect><rect x="116" y="38" width="4" height="14" rx="2"></rect><rect x="124" y="42" width="4" height="6" rx="2"></rect></g>' +
     '<path class="nagain" d="M109 45 A7 7 0 1 0 111.5 39.6 M109 36 V40.5 H113.5" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"></path></g>';
   var NOTE_SCENE = COUCH + CADY;
+  // 1b: a melancholic Cady (worried brows, eyes down, a small frown once she's done) under a moon, no clock.
+  var SAD_CADY = CADY
+    .replace('<circle cx="151" cy="116" r="2.8" fill="#1A1300"></circle><circle cx="166" cy="112" r="2.8" fill="#1A1300"></circle>',
+      '<circle cx="151" cy="117.5" r="2.6" fill="#1A1300"></circle><circle cx="166" cy="113.5" r="2.6" fill="#1A1300"></circle>' +
+      '<path d="M145.5 112.5 L152.5 108" stroke="#1A1300" stroke-width="2" stroke-linecap="round"></path><path d="M161 104 L169 107.5" stroke="#1A1300" stroke-width="2" stroke-linecap="round"></path>')
+    .replace('d="M152 126 Q161 133 171 123"', 'd="M154 131 Q161 126.5 169 128"');
+  var SAD_SCENE = COUCH.replace(/<circle cx="262"[^]*?<\/path>/, '') +
+    '<circle cx="262" cy="46" r="13" fill="#D9D4C4"></circle><circle cx="269" cy="41" r="11.5" fill="#0F1724"></circle>' +
+    '<circle cx="246" cy="32" r="1.8" fill="#D9D4C4"></circle><circle cx="282" cy="66" r="1.5" fill="#D9D4C4"></circle><circle cx="240" cy="60" r="1.3" fill="#D9D4C4"></circle>' + SAD_CADY;
   var HINT_KEY = 'homekey.noteTapped';
   function noteTapped() { try { return localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; } }
   // Which of the five steps a screen belongs to, as a small label above its headline (same icons as the intro).
@@ -266,18 +294,19 @@ var L = (function () {
     var c = ch(), shown = textShown('idea'), v = s.voice;
     var st = v === 'speaking' ? 'speaking' : v === 'loading' ? 'loading' : (s.heard.idea || s.read.idea) ? 'heard' : 'idle';
     var label = st === 'speaking' || st === 'loading' ? 'Stop Cady' : st === 'heard' ? 'Hear Cady again' : 'Tap Cady to listen';
-    var h = stepLabel('idea') + '<h1 class="lh">' + esc(c.headline) + '</h1>';
+    var h = stepLabel('idea') + '<h1 class="lh">' + esc(c.headlineV2 || c.headline) + '</h1>';
     h += '<div class="lstage"><button type="button" class="lnote" data-act="l-speak" data-state="' + st + '" aria-label="' + label + '">' +
-      '<svg aria-hidden="true" viewBox="30 10 260 190">' + NOTE_SCENE + '</svg></button>' +
+      '<svg aria-hidden="true" viewBox="30 10 260 190">' + (c.mood === 'sad' ? SAD_SCENE : NOTE_SCENE) + '</svg></button>' +
       '<div class="lhint">' + (st === 'idle' ? 'Tap Cady' : '') + '</div></div>'; // shown every time she waits, as in the intro
-    h += '<div class="lsubs" aria-live="polite">' + (shown ? c.explain.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') : '') + '</div>';
+    h += '<div class="lsubs" aria-live="polite">' + (shown ? (c.explainV2 || c.explain).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') : '') + '</div>';
     h += '<div class="llinkslot">' + readLink('idea') + '</div>'; // a fixed slot, so nothing moves when the link goes away
     return h + bottomHtml('Continue', canContinue('idea'));
   }
   function demoHtml() {
-    var h = stepLabel('demo') + '<h1 class="lh">Hear a home chord</h1><p class="lp">Tap play and notice how settled it sounds.</p>';
-    h += '<div class="lmid"><div class="lcenter"><button type="button" class="lround' + (s.demoPlayed ? '' : ' primary') + '" data-act="l-demo" aria-label="' + (s.demoPlayed ? 'Play the home chord again' : 'Play the home chord') + '">' + (s.demoPlayed ? ICON.again : ICON.play) + '</button>' +
-      '<div class="lroundlbl' + (s.demoPlayed ? '' : ' on') + '">' + (s.demoPlayed ? 'Play it again' : 'Play the home chord') + '</div></div>';
+    var d = ch().demoV2 || { title: 'Hear a home chord', sub: 'Tap play and notice how settled it sounds.', label: 'Play the home chord' };
+    var h = stepLabel('demo') + '<h1 class="lh">' + esc(d.title) + '</h1><p class="lp">' + esc(d.sub) + '</p>';
+    h += '<div class="lmid"><div class="lcenter"><button type="button" class="lround' + (s.demoPlayed ? '' : ' primary') + '" data-act="l-demo" aria-label="' + (s.demoPlayed ? 'Play it again' : esc(d.label)) + '">' + (s.demoPlayed ? ICON.again : ICON.play) + '</button>' +
+      '<div class="lroundlbl' + (s.demoPlayed ? '' : ' on') + '">' + (s.demoPlayed ? 'Play it again' : esc(d.label)) + '</div></div>';
     h += keyboardHtml() + '</div>'; // play button and keys together, centered in the space above Continue
     return h + bottomHtml('Continue', canContinue('demo'));
   }
@@ -427,8 +456,8 @@ var L = (function () {
     var p = ch().play2;
     if (p.voice) { return play2Html(); }
     var h = stepLabel('play') + '<h1 class="lh">' + esc(p.title) + '</h1><p class="lp">' + esc(p.text) + '</p>';
-    h += '<div class="ltips"><div class="eyebrow">Tips for a pro sound</div>' + p.tips.map(function (t) { return '<div class="ltip"><span></span><div>' + t + '</div></div>'; }).join('') + '</div>';
-    h += '<div class="grow"></div>' + keyboardHtml().replace('<div class="kb">', '<div class="lend" aria-hidden="true"><span>End here</span></div><div class="kb">');
+    if (p.tips.length) { h += '<div class="ltips"><div class="eyebrow">Tips for a pro sound</div>' + p.tips.map(function (t) { return '<div class="ltip"><span></span><div>' + t + '</div></div>'; }).join('') + '</div>'; }
+    h += '<div class="grow"></div>' + (p.endHere === false ? keyboardHtml() : keyboardHtml().replace('<div class="kb">', '<div class="lend" aria-hidden="true"><span>End here</span></div><div class="kb">'));
     h += '<p class="lsmall">No piano nearby? Play on these keys.</p>';
     h += s.groove === 'play'
       ? '<button type="button" class="btn ready lgroove" data-act="l-groove" data-i="play">' + ICON.stop + 'Stop</button>'
