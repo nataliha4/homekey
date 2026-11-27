@@ -49,15 +49,16 @@ CONTENT.chapters['1a'].earV2 = {
   b.songs.push({ title: 'Get Up, Stand Up', artist: 'Bob Marley & The Wailers', kind: 'Minor home',
     url: 'https://open.spotify.com/track/2Mw8xQJpIDAgrktDXEqxCs', spotifyId: '2Mw8xQJpIDAgrktDXEqxCs',
     startAt: 9 }); // skip the opening bars, where the bass moves around before it settles on home
-  b.songs.push({ title: 'A l\'écoute du moro', artist: 'Constantinople, Ablaye Cissoko', kind: 'Minor home',
-    url: 'https://open.spotify.com/track/4dWzy5bghH5005Vn1xK24G', spotifyId: '4dWzy5bghH5005Vn1xK24G' }); // the first minute stays on its sad home
+  // Song 3 (Nov 27, 2026, on trial): Humankind replaced A l'écoute du moro, whose 30-second phone preview lands in its major part.
+  b.songs.push({ title: 'Humankind', artist: 'Dhafer Youssef', kind: 'Minor home',
+    url: 'https://open.spotify.com/track/3urHsuSN1wtFkqnRZskBev', spotifyId: '3urHsuSN1wtFkqnRZskBev' });
   b.songsV2 = [
     { headline: 'Hear it in a song', voice: 'voice-1b-song1-v2.mp3',
       intro: 'Let\'s hear a sad home in real songs! First: Carol of the Bells. Four little notes circle round and round, like bells ringing in the cold. Can you hear how the home feels sad?' },
     { headline: 'One more song', voice: 'voice-1b-song2-v2.mp3',
       intro: 'Next up: Get Up, Stand Up, by Bob Marley! The home here is sad, but listen to that beat. Sad doesn\'t have to mean slow!' },
     { headline: 'One last song', voice: 'voice-1b-song3-v2.mp3',
-      intro: 'Here\'s something unusual and beautiful: A l\'écoute du moro, by Constantinople and Ablaye Cissoko, with the kora, a harp instrument from Africa. Listen to the first part. It stays in a sad home the whole time!' }];
+      intro: 'And the last one: Humankind, by Dhafer Youssef, a musician from Tunisia. Listen closely: the home stays sad the whole time.' }];
   b.recap = ['Home can be major or minor.', 'Major sounds happy. Minor sounds sad.', 'Only one note differs between them: the middle one.'];
 })();
 

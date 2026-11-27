@@ -793,7 +793,7 @@ function light(notes, caption) {
 }
 
 /* Which build is running: shown at the bottom of the path; keep it equal to the ?v= in index.html. */
-var APP_VERSION = '2026-11-26x';
+var APP_VERSION = '2026-11-27a';
 /* "Share HomeKey": the phone's own share menu with just the link; where there is none (most desktops), copy the link. */
 var SHARE_URL = 'https://nataliha4.github.io/homekey/next/';
 function shareLink(btn) {
